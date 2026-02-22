@@ -1,89 +1,551 @@
 <!DOCTYPE html>
 <html lang="si">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS System</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@latest/umd/index.min.js"></script>
-    
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .tab-button.active { background-color: #4f46e5; color: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); transition: transform 0.2s ease-in-out; }
-        .card:hover { transform: translateY(-5px); }
-        .form-input { width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db; transition: border-color 0.2s, box-shadow 0.2s; }
-        .form-input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); }
-        .btn-primary { background-color: #4f46e5; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background-color 0.3s; }
-        .btn-primary:hover { background-color: #4338ca; }
-        .btn-primary:disabled { background-color: #a5b4fc; cursor: not-allowed; }
-        .btn-secondary { background-color: #e5e7eb; color: #1f2937; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background-color 0.3s; }
-        .btn-secondary:hover { background-color: #d1d5db; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; overflow-y: auto; padding: 1rem 0; }
-        .modal-content { background: white; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 500px; max-height: 95vh; overflow-y: auto;}
-        #camera-modal { z-index: 1050; }
-        #id-scan-loader-modal { z-index: 1100; }
-        .camera-overlay-container { position: relative; width: 100%; }
-        .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-        .camera-overlay::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); }
-        .id-card-cutout { position: relative; width: 90%; height: 55%; border: 2px dashed #fff; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); }
-        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #4f46e5; width: 40px; height: 40px; -webkit-animation: spin 2s linear infinite; animation: spin 2s linear infinite; }
-        .filter-btn { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 0.875rem; transition: all 0.2s; }
-        .filter-btn.active { background-color: #4f46e5; color: white; border-color: #4f46e5; }
-        @-webkit-keyframes spin { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); } }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .tab-button.active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-primary:disabled {
+            background-color: #a5b4fc;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        #camera-modal {
+            z-index: 1050;
+        }
+
+        .camera-overlay-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .camera-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .id-card-cutout {
+            position: relative;
+            width: 90%;
+            height: 55%;
+            border: 2px dashed #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #4f46e5;
+            width: 40px;
+            height: 40px;
+            -webkit-animation: spin 2s linear infinite;
+            animation: spin 2s linear infinite;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
+
 <body class="p-4 md:p-8">
 
     <!-- Login Page -->
     <div id="login-page" class="page active">
         <div class="flex items-center justify-center min-h-screen">
-            <div class="w-full max-w-md"><div class="card p-8 space-y-6"><div class="text-center"><img src="https://firebasestorage.googleapis.com/v0/b/thinethhelthcare.firebasestorage.app/o/stock-images%2Flogo%20black%20BG.png?alt=media" alt="Vinu Batik Logo" class="w-24 h-24 mx-auto mb-4 object-contain rounded-full"><h1 class="text-3xl font-bold text-gray-800">POS System Login</h1><p class="text-gray-500 mt-2">Please Log In</p></div><div id="customer-login-form"><h2 class="text-xl font-semibold text-center mb-4 text-gray-700">Customer Login</h2><div><label class="block text-sm font-medium text-gray-600 mb-1">Your Phone Number</label><input type="tel" id="customer-phone-login" class="form-input" placeholder="දුරකථන අංකය" required></div><button id="customer-login-btn" class="btn-primary w-full mt-4 text-lg py-3"><span class="material-icons">person</span>Login as Customer</button><button id="show-register-modal-btn" class="w-full text-sm text-center text-red-600 hover:underline mt-2 !bg-transparent border-0">Register</button></div><div class="relative my-4"><div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-gray-300"></div></div><div class="relative flex justify-center"><span class="bg-white px-2 text-sm text-gray-500">Or</span></div></div><div id="admin-login-form" class="hidden space-y-4"><h2 class="text-lg font-semibold text-center text-gray-600">Admin Login</h2><div><label class="block text-sm font-medium text-gray-600 mb-1">Username</label><input type="text" id="admin-username" class="form-input" value="admin"></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Password</label><input type="password" id="admin-password" class="form-input" placeholder="මුරපදය"></div><button id="admin-login-btn" class="btn-primary w-full">Login as Admin</button></div><button id="show-admin-login-btn" class="w-full text-sm text-center text-indigo-600 hover:underline">Admin Login</button></div></div>
+            <div class="w-full max-w-md">
+                <div class="card p-8 space-y-6">
+                    <div class="text-center"><img
+                            src="https://firebasestorage.googleapis.com/v0/b/thinethhelthcare.firebasestorage.app/o/stock-images%2Flogo%20black%20BG.png?alt=media"
+                            alt="Vinu Batik Logo" class="w-24 h-24 mx-auto mb-4 object-contain rounded-full">
+                        <h1 class="text-3xl font-bold text-gray-800">POS System Login</h1>
+                        <p class="text-gray-500 mt-2">Please Log In</p>
+                    </div>
+                    <div id="customer-login-form">
+                        <h2 class="text-xl font-semibold text-center mb-4 text-gray-700">Customer Login</h2>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1">Your Phone Number</label><input
+                                type="tel" id="customer-phone-login" class="form-input" placeholder="දුරකථන අංකය"
+                                required></div><button id="customer-login-btn"
+                            class="btn-primary w-full mt-4 text-lg py-3"><span class="material-icons">person</span>Login
+                            as Customer</button><button id="show-register-modal-btn"
+                            class="w-full text-sm text-center text-red-600 hover:underline mt-2 !bg-transparent border-0">Register</button>
+                    </div>
+                    <div class="relative my-4">
+                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center"><span
+                                class="bg-white px-2 text-sm text-gray-500">Or</span></div>
+                    </div>
+                    <div id="admin-login-form" class="hidden space-y-4">
+                        <h2 class="text-lg font-semibold text-center text-gray-600">Admin Login</h2>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1">Username</label><input
+                                type="text" id="admin-username" class="form-input" value="admin"></div>
+                        <div><label class="block text-sm font-medium text-gray-600 mb-1">Password</label><input
+                                type="password" id="admin-password" class="form-input" placeholder="මුරපදය"></div>
+                        <button id="admin-login-btn" class="btn-primary w-full">Login as Admin</button>
+                    </div><button id="show-admin-login-btn"
+                        class="w-full text-sm text-center text-indigo-600 hover:underline">Admin Login</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Admin Panel -->
     <div id="admin-panel" class="page max-w-7xl mx-auto">
-        <header class="mb-8 flex items-center gap-4"><img src="https://firebasestorage.googleapis.com/v0/b/thinethhelthcare.firebasestorage.app/o/stock-images%2Flogo%20black%20BG.png?alt=media" alt="Logo" class="w-12 h-12 rounded-full object-contain"><h1 class="text-4xl font-bold text-gray-800">Admin Panel</h1><div class="flex-grow"></div><button id="admin-logout-btn" class="btn-secondary"><span class="material-icons">logout</span>Logout</button></header>
-        <div class="flex flex-wrap justify-center mb-8 bg-gray-200 rounded-lg p-2 gap-2"><button class="tab-button flex-1 py-2 px-4 rounded-md font-semibold active" onclick="showTab('stock')"><span class="material-icons align-middle mr-2">inventory_2</span>Stock</button><button class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('sales')"><span class="material-icons align-middle mr-2">point_of_sale</span>Sales</button><button class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('reports')"><span class="material-icons align-middle mr-2">assessment</span>Reports</button><button class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('registrations')"><span class="material-icons align-middle mr-2">how_to_reg</span>Registrations</button><button class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('settings')"><span class="material-icons align-middle mr-2">settings</span>Settings</button></div>
-        <div id="stock" class="tab-content" style="display: block;"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="md:col-span-1"><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">Add New Item</h2><form id="add-stock-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-600 mb-1">Item ID</label><div class="flex items-center space-x-2"><input type="text" id="itemId" class="form-input" placeholder="භාණ්ඩ අංකය (හිස්ව තබන්න)"><button type="button" id="open-stock-scanner" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span class="material-icons">qr_code_scanner</span></button></div></div><div><label for="itemCategory" class="block text-sm font-medium text-gray-600 mb-1">වර්ගය</label><select id="itemCategory" class="form-input"></select></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Price (LKR)</label><input type="number" id="itemPrice" class="form-input" placeholder="විකුණුම් මිල" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Cost (LKR)</label><input type="number" id="itemCost" class="form-input" placeholder="මිලදී ගත් මිල" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Supplier</label><input type="text" id="itemSupplier" class="form-input" placeholder="සැපයුම්කරු" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Picture</label><div class="flex items-center gap-2"><input type="file" id="itemPicture" class="form-input file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept="image/*"><button type="button" id="open-camera-btn" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span class="material-icons">photo_camera</span></button></div><img id="image-preview" class="hidden mt-2 rounded-md max-h-32"/></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Points (Optional)</label><input type="number" id="itemPoints" class="form-input" placeholder="උදා: 10"></div><button type="submit" class="btn-primary w-full"><span class="material-icons">add_shopping_cart</span>Add Item</button></form></div></div><div class="md:col-span-2"><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">Current Stock</h2><div id="stock-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"><p class="text-gray-500 col-span-full">Loading stock...</p></div></div></div></div></div>
-        <div id="sales" class="tab-content"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="md-col-span-1"><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">New Sale</h2><div id="sale-item-preview" class="hidden card p-4 my-4 border border-indigo-200"></div><div id="customer-points-info" class="hidden card p-3 my-4 border border-amber-300 bg-amber-50 text-sm"></div><form id="add-sale-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-600 mb-1">Item ID</label><div class="flex items-center space-x-2"><input type="text" id="saleItemId" class="form-input" placeholder="භාණ්ඩ අංකය" required><button type="button" id="open-sale-scanner" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span class="material-icons">qr_code_scanner</span></button></div></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Customer Name</label><input type="text" id="customerName" class="form-input" placeholder="ගනුදෙනුකරුගේ නම" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Contact Number</label><input type="text" id="customerContact" class="form-input" placeholder="දුරකථන අංකය" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Discount (LKR)</label><input type="number" id="saleDiscount" class="form-input" placeholder="වට්ටම (LKR)"></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Payment Type</label><div class="flex space-x-4"><label class="flex items-center"><input type="radio" name="paymentType" value="full" class="mr-2" checked> Full Cash</label><label class="flex items-center"><input type="radio" name="paymentType" value="installment" class="mr-2"> Installment</label></div></div><div id="downpayment-section" class="hidden"><label class="block text-sm font-medium text-gray-600 mb-1">Downpayment (LKR)</label><input type="number" id="downpaymentAmount" class="form-input" placeholder="මූලික ගෙවීම"></div><button type="submit" class="btn-primary w-full"><span class="material-icons">shopping_cart</span>Create Sale</button></form></div></div><div class="md:col-span-2"><div class="card p-6"><div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold text-gray-700">Ongoing Sales <span id="sales-count" class="text-base font-normal text-gray-500"></span></h2><div id="sales-filter-btns" class="flex items-center gap-2"></div></div><div class="mb-4"><input type="text" id="sales-search" class="form-input" placeholder="නම, දුරකථන අංකය හෝ ID මගින් සොයන්න..."></div><div id="sales-list" class="space-y-4"><p class="text-gray-500">Loading sales...</p></div></div></div></div></div>
-        <div id="reports" class="tab-content"><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">Sales Reports</h2><div class="flex flex-wrap gap-4 mb-6"><button id="report-daily" class="btn-secondary">Daily</button><button id="report-monthly" class="btn-secondary">Monthly</button><button id="report-annually" class="btn-secondary">Annual</button><button id="download-transactions-btn" class="btn-primary"><span class="material-icons">download</span>Download Transactions</button></div>
-<div id="report-output" class="bg-gray-50 p-6 rounded-lg">
+        <header class="mb-8 flex items-center gap-4"><img
+                src="https://firebasestorage.googleapis.com/v0/b/thinethhelthcare.firebasestorage.app/o/stock-images%2Flogo%20black%20BG.png?alt=media"
+                alt="Logo" class="w-12 h-12 rounded-full object-contain">
+            <h1 class="text-4xl font-bold text-gray-800">Admin Panel</h1>
+            <div class="flex-grow"></div><button id="admin-logout-btn" class="btn-secondary"><span
+                    class="material-icons">logout</span>Logout</button>
+        </header>
+        <div class="flex flex-wrap justify-center mb-8 bg-gray-200 rounded-lg p-2 gap-2"><button
+                class="tab-button flex-1 py-2 px-4 rounded-md font-semibold active" onclick="showTab('stock')"><span
+                    class="material-icons align-middle mr-2">inventory_2</span>Stock</button><button
+                class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('sales')"><span
+                    class="material-icons align-middle mr-2">point_of_sale</span>Sales</button><button
+                class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('reports')"><span
+                    class="material-icons align-middle mr-2">assessment</span>Reports</button><button
+                class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('registrations')"><span
+                    class="material-icons align-middle mr-2">how_to_reg</span>Registrations</button><button
+                class="tab-button flex-1 py-2 px-4 rounded-md font-semibold" onclick="showTab('settings')"><span
+                    class="material-icons align-middle mr-2">settings</span>Settings</button></div>
+
+        <div id="stock" class="tab-content" style="display: block;">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <div class="card p-6">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-700">Add New Item</h2>
+                        <form id="add-stock-form" class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Item ID</label>
+                                <div class="flex items-center space-x-2"><input type="text" id="itemId"
+                                        class="form-input" placeholder="භාණ්ඩ අංකය (හිස්ව තබන්න)"><button type="button"
+                                        id="open-stock-scanner"
+                                        class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span
+                                            class="material-icons">qr_code_scanner</span></button></div>
+                            </div>
+                            <div><label for="itemCategory"
+                                    class="block text-sm font-medium text-gray-600 mb-1">වර්ගය</label><select
+                                    id="itemCategory" class="form-input"></select></div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Price (LKR)</label><input
+                                    type="number" id="itemPrice" class="form-input" placeholder="විකුණුම් මිල" required>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Cost (LKR)</label><input
+                                    type="number" id="itemCost" class="form-input" placeholder="මිලදී ගත් මිල" required>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Supplier</label><input
+                                    type="text" id="itemSupplier" class="form-input" placeholder="සැපයුම්කරු" required>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Picture</label>
+                                <div class="flex items-center gap-2"><input type="file" id="itemPicture"
+                                        class="form-input file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                        accept="image/*"><button type="button" id="open-camera-btn"
+                                        class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span
+                                            class="material-icons">photo_camera</span></button></div><img
+                                    id="image-preview" class="hidden mt-2 rounded-md max-h-32" />
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Points
+                                    (Optional)</label><input type="number" id="itemPoints" class="form-input"
+                                    placeholder="උදා: 10"></div><button type="submit" class="btn-primary w-full"><span
+                                    class="material-icons">add_shopping_cart</span>Add Item</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4 flex-wrap">
+                            <h2 class="text-2xl font-bold text-gray-700">Current Stock</h2>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4 bg-gray-100 p-3 rounded-lg">
+                            <div>
+                                <label class="text-xs text-gray-500">Sort By</label>
+                                <select id="stock-sort" class="form-input py-1 text-sm">
+                                    <option value="id_asc" selected>Item ID (A-Z)</option>
+                                    <option value="price_asc">Price (Low to High)</option>
+                                    <option value="date_desc">Date Added (Newest)</option>
+                                    <option value="date_asc">Date Added (Oldest)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Category</label>
+                                <select id="stock-filter-category" class="form-input py-1 text-sm">
+                                    <option value="all">All Categories</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500">Supplier</label>
+                                <select id="stock-filter-supplier" class="form-input py-1 text-sm">
+                                    <option value="all">All Suppliers</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="stock-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <p class="text-gray-500 col-span-full">Loading stock...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sales" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md-col-span-1">
+                    <div class="card p-6">
+                        <h2 class="text-2xl font-bold mb-4 text-gray-700">New Sale</h2>
+                        <div id="sale-item-preview" class="hidden card p-4 my-4 border border-indigo-200"></div>
+                        <div id="customer-points-info"
+                            class="hidden card p-3 my-4 border border-amber-300 bg-amber-50 text-sm"></div>
+                        <form id="add-sale-form" class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Item ID</label>
+                                <div class="flex items-center space-x-2"><input type="text" id="saleItemId"
+                                        class="form-input" placeholder="භාණ්ඩ අංකය" required><button type="button"
+                                        id="open-sale-scanner"
+                                        class="p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span
+                                            class="material-icons">qr_code_scanner</span></button></div>
+                            </div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Customer Name</label><input
+                                    type="text" id="customerName" class="form-input" placeholder="ගනුදෙනුකරුගේ නම"
+                                    autocomplete="off" required></div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Contact
+                                    Number</label><input type="text" id="customerContact" class="form-input"
+                                    placeholder="දුරකථන අංකය" autocomplete="off" required></div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Discount
+                                    (LKR)</label><input type="number" id="saleDiscount" class="form-input"
+                                    placeholder="වට්ටම (LKR)"></div>
+                            <div><label class="block text-sm font-medium text-gray-600 mb-1">Payment Type</label>
+                                <div class="flex space-x-4"><label class="flex items-center"><input type="radio"
+                                            name="paymentType" value="full" class="mr-2" checked> Full
+                                        Cash</label><label class="flex items-center"><input type="radio"
+                                            name="paymentType" value="installment" class="mr-2"> Installment</label>
+                                </div>
+                            </div>
+                            <div id="downpayment-section" class="hidden"><label
+                                    class="block text-sm font-medium text-gray-600 mb-1">Downpayment (LKR)</label><input
+                                    type="number" id="downpaymentAmount" class="form-input" placeholder="මූලික ගෙවීම">
+                            </div><button type="submit" class="btn-primary w-full"><span
+                                    class="material-icons">shopping_cart</span>Create Sale</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold text-gray-700">Ongoing Sales <span id="sales-count"
+                                    class="text-base font-normal text-gray-500"></span></h2>
+                            <div id="sales-filter-btns" class="flex items-center gap-2"></div>
+                        </div>
+                        <div class="mb-4"><input type="text" id="sales-search" class="form-input"
+                                placeholder="නම, දුරකථන අංකය හෝ ID මගින් සොයන්න..."></div>
+                        <div id="sales-list" class="space-y-4">
+                            <p class="text-gray-500">Loading sales...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="reports" class="tab-content">
+            <div class="card p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">Sales Reports</h2>
+                <div class="flex flex-wrap gap-4 mb-6"><button id="report-daily"
+                        class="btn-secondary">Today</button><button id="report-monthly" class="btn-secondary">This
+                        Month</button><button id="report-annually" class="btn-secondary">This Year</button><button
+                        id="download-transactions-btn" class="btn-primary"><span
+                            class="material-icons">download</span>Download Transactions</button>
+                    <div class="flex flex-wrap items-center gap-4 ml-auto">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-700">Custom Month:</label>
+                            <input type="month" id="custom-month-selector" class="form-input w-auto py-1.5 text-sm">
+                            <button id="report-custom-month-btn" class="btn-primary !py-1.5 !px-3 text-sm"
+                                title="View Month details"><span
+                                    class="material-icons text-sm">view_list</span></button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-gray-700">Custom Year:</label>
+                            <input type="number" id="custom-year-selector" class="form-input w-24 py-1.5 text-sm"
+                                placeholder="e.g. 2025" min="2000" max="2100">
+                            <button id="report-custom-year-btn" class="btn-primary !py-1.5 !px-3 text-sm"><span
+                                    class="material-icons text-sm">view_list</span> View Details</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="report-output" class="bg-gray-50 p-6 rounded-lg">
                     <h3 class="text-xl font-semibold text-gray-800 mb-2" id="report-title">Select a report to view.</h3>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <div class="text-center p-4 bg-blue-100 rounded-lg"><p class="text-sm text-blue-800">Total Sales</p><p class="text-2xl font-bold text-blue-900" id="report-total-sales">0</p></div>
-                        <div class="text-center p-4 bg-green-100 rounded-lg"><p class="text-sm text-green-800">Total Revenue</p><p class="text-2xl font-bold text-green-900" id="report-total-revenue">LKR 0</p></div>
-                        <div class="text-center p-4 bg-yellow-100 rounded-lg"><p class="text-sm text-yellow-800">Total Cost</p><p class="text-2xl font-bold text-yellow-900" id="report-total-cost">LKR 0</p></div>
-                        <div class="text-center p-4 bg-red-100 rounded-lg"><p class="text-sm text-red-800">Total Profit</p><p class="text-2xl font-bold text-red-900" id="report-total-profit">LKR 0</p></div>
-                        <div class="text-center p-4 bg-orange-100 rounded-lg"><p class="text-sm text-orange-800">Total Outstanding</p><p class="text-2xl font-bold text-orange-900" id="report-total-outstanding">LKR 0</p></div>
-                        <div class="text-center p-4 bg-teal-100 rounded-lg"><p class="text-sm text-teal-800">Cash In Hand</p><p class="text-2xl font-bold text-teal-900" id="report-cash-in-hand">LKR 0</p></div>
+                        <div class="text-center p-4 bg-blue-100 rounded-lg">
+                            <p class="text-sm text-blue-800">Total Sales</p>
+                            <p class="text-2xl font-bold text-blue-900" id="report-total-sales">0</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-100 rounded-lg">
+                            <p class="text-sm text-green-800">Total Revenue</p>
+                            <p class="text-2xl font-bold text-green-900" id="report-total-revenue">LKR 0</p>
+                        </div>
+                        <div class="text-center p-4 bg-yellow-100 rounded-lg">
+                            <p class="text-sm text-yellow-800">Total Cost</p>
+                            <p class="text-2xl font-bold text-yellow-900" id="report-total-cost">LKR 0</p>
+                        </div>
+                        <div class="text-center p-4 bg-red-100 rounded-lg">
+                            <p class="text-sm text-red-800">Total Profit</p>
+                            <p class="text-2xl font-bold text-red-900" id="report-total-profit">LKR 0</p>
+                        </div>
+                        <div class="text-center p-4 bg-orange-100 rounded-lg">
+                            <p class="text-sm text-orange-800">Total Outstanding</p>
+                            <p class="text-2xl font-bold text-orange-900" id="report-total-outstanding">LKR 0</p>
+                        </div>
+                        <div class="text-center p-4 bg-teal-100 rounded-lg">
+                            <p class="text-sm text-teal-800">Cash In Hand</p>
+                            <p class="text-2xl font-bold text-teal-900" id="report-cash-in-hand">LKR 0</p>
+                        </div>
                     </div>
-                </div></div><div class="card p-6 mt-8"><h2 class="text-2xl font-bold mb-4 text-gray-700">Available Stock Details</h2><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"><div class="p-4 bg-gray-100 rounded-lg text-center"><p class="text-sm text-gray-600">Total Stock Value (Cost)</p><p id="total-stock-value" class="text-2xl font-bold text-gray-800">LKR 0.00</p></div><div class="p-4 bg-green-100 rounded-lg text-center"><p class="text-sm text-green-600">Potential Profit</p><p id="potential-profit" class="text-2xl font-bold text-green-800">LKR 0.00</p></div><div class="p-4 bg-blue-100 rounded-lg text-center"><p class="text-sm text-blue-600">Total Stock Value (Selling)</p><p id="total-stock-selling-price" class="text-2xl font-bold text-blue-800">LKR 0.00</p></div></div><button id="download-stock-btn" class="btn-primary mb-4"><span class="material-icons">download</span>Download Stock Report</button><div id="stock-report-list" class="space-y-2"></div></div></div>
-        <div id="registrations" class="tab-content"><div class="card p-6 mb-8"><h2 class="text-2xl font-bold mb-4 text-gray-700">Pending Registrations</h2><div id="registration-requests-list" class="space-y-4"><p class="text-gray-500">Loading registration requests...</p></div></div><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">Registered Customers (<span id="registered-customer-count">0</span>)</h2><div id="registered-customers-list" class="space-y-4"><p class="text-gray-500">Loading customers...</p></div></div></div>
-        <div id="settings" class="tab-content space-y-8"><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">General Settings</h2><div class="flex flex-wrap items-center gap-4"><button id="print-barcodes-btn" class="btn-primary"><span class="material-icons">view_column</span>Print Barcodes</button><span id="next-barcode-range" class="text-sm text-gray-500"></span><button id="manage-categories-btn" class="btn-primary"><span class="material-icons">category</span>Manage Categories</button></div></div><div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">SMS Settings</h2><div class="flex flex-wrap gap-4"><button id="manage-sms-btn" class="btn-primary"><span class="material-icons">sms</span>Manage SMS Templates</button><button id="download-sms-log-btn" class="btn-primary"><span class="material-icons">history</span>Download SMS Log</button></div></div></div>
+                </div>
+                <div id="custom-monthly-details-container" class="mt-8 hidden">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4" id="custom-monthly-details-title">Monthly Detailed
+                        Sales</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg overflow-hidden shadow">
+                            <thead class="bg-gray-100 text-gray-600 text-sm uppercase font-semibold">
+                                <tr>
+                                    <th class="py-3 px-4 text-left">Date</th>
+                                    <th class="py-3 px-4 text-left">Item ID</th>
+                                    <th class="py-3 px-4 text-left">Customer</th>
+                                    <th class="py-3 px-4 text-right">Orig. Price</th>
+                                    <th class="py-3 px-4 text-right">Discount</th>
+                                    <th class="py-3 px-4 text-right">Final Price</th>
+                                    <th class="py-3 px-4 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="custom-monthly-details-list" class="text-gray-700 text-sm">
+                                <!-- Details will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card p-6 mt-8">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">Available Stock Details</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="p-4 bg-gray-100 rounded-lg text-center">
+                        <p class="text-sm text-gray-600">Total Stock Value (Cost)</p>
+                        <p id="total-stock-value" class="text-2xl font-bold text-gray-800">LKR 0.00</p>
+                    </div>
+                    <div class="p-4 bg-green-100 rounded-lg text-center">
+                        <p class="text-sm text-green-600">Potential Profit</p>
+                        <p id="potential-profit" class="text-2xl font-bold text-green-800">LKR 0.00</p>
+                    </div>
+                    <div class="p-4 bg-blue-100 rounded-lg text-center">
+                        <p class="text-sm text-blue-600">Total Stock Value (Selling)</p>
+                        <p id="total-stock-selling-price" class="text-2xl font-bold text-blue-800">LKR 0.00</p>
+                    </div>
+                </div><button id="download-stock-btn" class="btn-primary mb-4"><span
+                        class="material-icons">download</span>Download Stock Report</button>
+                <div id="stock-report-list" class="space-y-2"></div>
+            </div>
+        </div>
+        <div id="registrations" class="tab-content">
+            <div class="card p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">Pending Registrations</h2>
+                <div id="registration-requests-list" class="space-y-4">
+                    <p class="text-gray-500">Loading registration requests...</p>
+                </div>
+            </div>
+            <div class="card p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">Registered Customers (<span
+                        id="registered-customer-count">0</span>)</h2>
+                <div id="registered-customers-list" class="space-y-4">
+                    <p class="text-gray-500">Loading customers...</p>
+                </div>
+            </div>
+        </div>
+        <div id="settings" class="tab-content space-y-8">
+            <div class="card p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">General Settings</h2>
+                <div class="flex flex-wrap items-center gap-4"><button id="print-barcodes-btn" class="btn-primary"><span
+                            class="material-icons">view_column</span>Print Barcodes</button><span
+                        id="next-barcode-range" class="text-sm text-gray-500"></span><button id="manage-categories-btn"
+                        class="btn-primary"><span class="material-icons">category</span>Manage Categories</button></div>
+            </div>
+            <div class="card p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-700">SMS Settings</h2>
+                <div class="flex flex-wrap gap-4"><button id="manage-sms-btn" class="btn-primary"><span
+                            class="material-icons">sms</span>Manage SMS Templates</button><button
+                        id="download-sms-log-btn" class="btn-primary"><span
+                            class="material-icons">history</span>Download SMS Log</button></div>
+            </div>
+        </div>
     </div>
-    
+
     <!-- Customer Dashboard -->
     <div id="customer-dashboard" class="page max-w-4xl mx-auto">
         <header class="mb-8 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
             <div class="flex items-center gap-4">
-                <img src="https://firebasestorage.googleapis.com/v0/b/thinethhelthcare.firebasestorage.app/o/stock-images%2Flogo%20black%20BG.png?alt=media" alt="Vinu Batik Logo" class="w-20 h-20 rounded-full object-cover">
+                <img src="https://firebasestorage.googleapis.com/v0/b/thinethhelthcare.firebasestorage.app/o/stock-images%2Flogo%20black%20BG.png?alt=media"
+                    alt="Vinu Batik Logo" class="w-20 h-20 rounded-full object-cover">
                 <div>
                     <h1 id="customer-welcome-name" class="text-4xl font-bold text-gray-800">Welcome!</h1>
                     <p id="customer-info-contact" class="text-gray-500 mt-2">Your sales dashboard.</p>
                 </div>
             </div>
-            <button id="customer-logout-btn" class="btn-secondary"><span class="material-icons">logout</span>Logout</button>
+            <button id="customer-logout-btn" class="btn-secondary"><span
+                    class="material-icons">logout</span>Logout</button>
         </header>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div id="total-points-card" class="card p-6 bg-indigo-100 border-indigo-400 border">
@@ -92,34 +554,255 @@
                         <h2 class="text-xl font-bold text-indigo-800">Total Earned Points</h2>
                         <p id="total-points-amount" class="text-3xl font-bold text-indigo-900 mt-2">0 Points</p>
                     </div>
-                    <button id="redeem-points-btn" class="btn-primary !rounded-full !p-3" title="Redeem Points"><span class="material-icons">card_giftcard</span></button>
+                    <button id="redeem-points-btn" class="btn-primary !rounded-full !p-3" title="Redeem Points"><span
+                            class="material-icons">card_giftcard</span></button>
                 </div>
             </div>
-            <div id="outstanding-balance-card" class="card p-6 bg-amber-100 border-amber-400 border hidden"><h2 class="text-xl font-bold text-amber-800">Outstanding Balance</h2><p id="outstanding-balance-amount" class="text-3xl font-bold text-amber-900 mt-2">LKR 0.00</p></div>
+            <div id="outstanding-balance-card" class="card p-6 bg-amber-100 border-amber-400 border hidden">
+                <h2 class="text-xl font-bold text-amber-800">Outstanding Balance</h2>
+                <p id="outstanding-balance-amount" class="text-3xl font-bold text-amber-900 mt-2">LKR 0.00</p>
+            </div>
         </div>
-        <div class="card p-6"><h2 class="text-2xl font-bold mb-4 text-gray-700">Your Purchases</h2><div id="customer-sales-list" class="space-y-4"></div></div>
+        <div class="card p-6">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">Your Purchases</h2>
+            <div id="customer-sales-list" class="space-y-4"></div>
+        </div>
     </div>
 
     <!-- Modals -->
-    <div id="scanner-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold text-center mb-4">Scan Barcode / QR Code</h3><div id="reader" width="100%"></div><button id="close-scanner" class="btn-secondary w-full mt-4">Close Camera</button></div></div>
-    <div id="edit-sale-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Customer Info</h3><form id="edit-sale-form" class="space-y-4"><input type="hidden" id="edit-sale-key"><div><label class="block text-sm font-medium text-gray-600 mb-1">Customer Name</label><input type="text" id="edit-customerName" class="form-input" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Contact Number</label><input type="text" id="edit-customerContact" class="form-input" required></div><div class="flex justify-end space-x-3 mt-4"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" class="btn-primary">Save Changes</button></div></form></div></div>
-    <div id="edit-stock-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Stock Item</h3><form id="edit-stock-form" class="space-y-4"><input type="hidden" id="edit-stock-id"><input type="hidden" id="edit-stock-image-url"><div><label class="block text-sm font-medium text-gray-600 mb-1">Item ID</label><input type="text" id="edit-itemId-display" class="form-input bg-gray-100" readonly></div><div><label for="edit-itemCategory" class="block text-sm font-medium text-gray-600 mb-1">Category</label><select id="edit-itemCategory" class="form-input"></select></div><div><label>Price (LKR)</label><input type="number" id="edit-itemPrice" class="form-input" required></div><div><label>Cost (LKR)</label><input type="number" id="edit-itemCost" class="form-input" required></div><div><label>Supplier</label><input type="text" id="edit-itemSupplier" class="form-input" required></div><div><label>Points</label><input type="number" id="edit-itemPoints" class="form-input"></div><div class="flex justify-end space-x-3 mt-4"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" class="btn-primary">Save Changes</button></div></form></div></div>
-    <div id="delete-confirm-modal" class="modal"><div class="modal-content max-w-sm text-center"><span class="material-icons text-5xl text-red-500 mb-4">warning</span><h3 class="text-xl font-bold mb-2">Are you sure?</h3><p class="text-gray-600 mb-6">Do you really want to delete this item? This process cannot be undone.</p><div class="flex justify-center space-x-3"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="button" id="confirm-delete-btn" class="btn-primary bg-red-600 hover:bg-red-700">Delete</button></div></div></div>
-    <div id="camera-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold text-center mb-4">Take a Photo</h3><div class="camera-overlay-container"><video id="camera-feed" class="w-full rounded-md bg-gray-900" playsinline></video><div id="id-camera-overlay" class="camera-overlay hidden"><div class="id-card-cutout"></div></div></div><canvas id="photo-canvas" class="hidden"></canvas><div class="flex justify-center gap-4 mt-4"><button id="take-photo-btn" class="btn-primary"><span class="material-icons">photo_camera</span>Take Photo</button><button type="button" class="btn-secondary close-modal-btn">Cancel</button></div></div></div>
-    <div id="sms-templates-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit SMS Templates</h3><form id="sms-templates-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-600 mb-1">Sale Confirmation</label><textarea id="template-sale" class="form-input h-24" placeholder="Use placeholders like {{itemId}}, {{price}}, {{pointsEarned}}, {{totalPoints}}"></textarea></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Customer Login</label><textarea id="template-login" class="form-input h-24" placeholder="Use {{customerName}}"></textarea></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Installment Update</label><textarea id="template-installment" class="form-input h-24" placeholder="Use {{amount}}, {{balance}}"></textarea></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Payment Reminder</label><textarea id="template-reminder" class="form-input h-24" placeholder="Use {{customerName}}, {{balance}}"></textarea></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Failed Login Attempt</label><textarea id="template-loginFailed" class="form-input h-24"></textarea></div><div class="flex justify-between items-center mt-4"><button type="button" id="reset-sms-btn" class="btn-secondary !bg-yellow-200 !text-yellow-800">Reset</button><div class="space-x-3"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" class="btn-primary">Save Templates</button></div></div></form></div></div>
-    <div id="category-manager-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Manage Categories</h3><form id="add-category-form" class="flex gap-2 mb-4"><input type="text" id="new-category-name" class="form-input" placeholder="New category name" required><button type="submit" class="btn-primary">Add</button></form><div id="category-list" class="space-y-2"></div><div class="flex justify-end mt-4"><button type="button" class="btn-secondary close-modal-btn">Close</button></div></div></div>
-    <div id="register-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">New Customer Registration</h3><form id="register-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-600 mb-1">Full Name</label><input type="text" id="register-name" class="form-input" placeholder="සම්පූර්ණ නම" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Contact Number</label><input type="tel" id="register-contact" class="form-input" placeholder="දුරකථන අංකය" required></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Address</label><textarea id="register-address" class="form-input" placeholder="ලිපිනය"></textarea></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Workplace (Optional)</label><input type="text" id="register-workplace" class="form-input" placeholder="සේවා ස්ථානය"></div><div><label class="block text-sm font-medium text-gray-600 mb-1">Work Address (Optional)</label><textarea id="register-work-address" class="form-input" placeholder="සේවා ලිපිනය"></textarea></div><div><label class="block text-sm font-medium text-gray-600 mb-1">National ID (Front)</label><div class="flex items-center gap-2"><input type="file" id="register-id-front" class="form-input" accept="image/*" required><button type="button" data-target-input="register-id-front" data-target-preview="id-front-preview" class="open-id-camera-btn p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span class="material-icons">photo_camera</span></button></div><img id="id-front-preview" class="hidden mt-2 rounded-md max-h-32"/></div><div><label class="block text-sm font-medium text-gray-600 mb-1">National ID (Back)</label><div class="flex items-center gap-2"><input type="file" id="register-id-back" class="form-input" accept="image/*" required><button type="button" data-target-input="register-id-back" data-target-preview="id-back-preview" class="open-id-camera-btn p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span class="material-icons">photo_camera</span></button></div><img id="id-back-preview" class="hidden mt-2 rounded-md max-h-32"/></div><div class="flex items-start mt-4"><div class="flex items-center h-5"><input id="accept-terms" type="checkbox" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"></div><div class="ml-3 text-sm"><label for="accept-terms" class="font-medium text-gray-700">I accept the <a href="#" id="show-terms-link" class="text-indigo-600 hover:underline">Terms and Conditions</a></label></div></div><div id="register-loader" class="hidden justify-center items-center gap-2 mt-4"><div class="loader"></div><span>Uploading images...</span></div><div class="flex justify-end space-x-3 mt-4"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" id="register-submit-btn" class="btn-primary" disabled>Submit Request</button></div></form></div></div>
-    <div id="reject-reason-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Reason for Rejection</h3><form id="reject-reason-form" class="space-y-4"><input type="hidden" id="reject-request-key"><input type="hidden" id="reject-customer-contact"><input type="hidden" id="reject-customer-name"><div><label for="reject-reason" class="block text-sm font-medium text-gray-700">Please select a reason:</label><select id="reject-reason" class="form-input mt-1"><option value="Photo Pahadili natha">Photo is not clear (පින්තූරය අපැහැදිලියි)</option><option value="Thorathuru niwaradi natha">Information is incorrect (තොරතුරු සාවද්‍යයි)</option></select></div><div class="flex justify-end space-x-3 mt-4"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" class="btn-primary bg-red-600 hover:bg-red-700">Confirm Rejection</button></div></form></div></div>
-    <div id="terms-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Terms and Conditions</h3><pre id="terms-content" class="whitespace-pre-wrap text-gray-600 font-sans text-sm">Loading terms...</pre><div class="flex justify-end mt-4"><button type="button" class="btn-secondary close-modal-btn">Close</button></div></div></div>
-    <div id="customer-confirm-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-2">Customer Exists</h3><p class="text-gray-600 mb-4">A customer with this phone number already exists with a different name.</p><div class="mb-4"><p class="text-sm"><b>Existing Name:</b> <span id="existing-customer-name"></span></p><p class="text-sm"><b>New Name:</b> <span id="new-customer-name"></span></p></div><p class="mb-6">Do you want to update the existing customer's name and proceed with the sale?</p><div class="flex justify-end gap-3"><button id="cancel-sale-creation-btn" class="btn-secondary">Cancel</button><button id="update-name-and-proceed-btn" class="btn-primary">Update & Proceed</button></div></div></div>
-    <div id="scanned-details-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Scanned ID Details</h3><div id="scanned-details-content" class="text-sm space-y-2"></div><div class="flex justify-end mt-4"><button type="button" class="btn-secondary close-modal-btn">Close</button></div></div></div>
-    <div id="id-scan-loader-modal" class="modal"><div class="modal-content max-w-sm text-center"><div class="loader mx-auto"></div><p class="mt-4 text-gray-700">Analyzing ID card...</p></div></div>
-    <div id="edit-customer-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Edit Customer Details</h3><form id="edit-customer-form" class="space-y-4"><input type="hidden" id="edit-customer-key"><div><label class="block text-sm font-medium text-gray-600">Full Name</label><input type="text" id="edit-customer-name-input" class="form-input"></div><div><label class="block text-sm font-medium text-gray-600">Address</label><textarea id="edit-customer-address-input" class="form-input"></textarea></div><div><label class="block text-sm font-medium text-gray-600">Workplace</label><input type="text" id="edit-customer-workplace-input" class="form-input"></div><div><label class="block text-sm font-medium text-gray-600">Work Address</label><textarea id="edit-customer-work-address-input" class="form-input"></textarea></div><div class="flex justify-end gap-3 mt-4"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" class="btn-primary">Save Changes</button></div></form></div></div>
-    <div id="otp-modal" class="modal"><div class="modal-content"><h3 class="text-xl font-bold mb-4">Enter OTP</h3><p class="text-gray-600 mb-4">A 4-digit OTP has been sent to your phone. Please enter it below to request point redemption.</p><form id="otp-form" class="space-y-4"><div><label class="block text-sm font-medium text-gray-600">OTP</label><input type="number" id="otp-input" class="form-input" placeholder="XXXX" required></div><div class="flex justify-end gap-3 mt-4"><button type="button" class="btn-secondary close-modal-btn">Cancel</button><button type="submit" class="btn-primary">Verify OTP</button></div></form></div></div>
+    <div id="scanner-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-center mb-4">Scan Barcode / QR Code</h3>
+            <div id="reader" width="100%"></div><button id="close-scanner" class="btn-secondary w-full mt-4">Close
+                Camera</button>
+        </div>
+    </div>
+    <div id="edit-sale-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Edit Customer Info</h3>
+            <form id="edit-sale-form" class="space-y-4"><input type="hidden" id="edit-sale-key">
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Customer Name</label><input type="text"
+                        id="edit-customerName" class="form-input" required></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Contact Number</label><input
+                        type="text" id="edit-customerContact" class="form-input" required></div>
+                <div class="flex justify-end space-x-3 mt-4"><button type="button"
+                        class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                        class="btn-primary">Save Changes</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="edit-stock-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Edit Stock Item</h3>
+            <form id="edit-stock-form" class="space-y-4"><input type="hidden" id="edit-stock-id"><input type="hidden"
+                    id="edit-stock-image-url" data-thumb-url="">
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Item ID</label><input type="text"
+                        id="edit-itemId-display" class="form-input bg-gray-100" readonly></div>
+                <div><label for="edit-itemCategory"
+                        class="block text-sm font-medium text-gray-600 mb-1">Category</label><select
+                        id="edit-itemCategory" class="form-input"></select></div>
+                <div><label>Price (LKR)</label><input type="number" id="edit-itemPrice" class="form-input" required>
+                </div>
+                <div><label>Cost (LKR)</label><input type="number" id="edit-itemCost" class="form-input" required></div>
+                <div><label>Supplier</label><input type="text" id="edit-itemSupplier" class="form-input" required></div>
+                <div><label>Points</label><input type="number" id="edit-itemPoints" class="form-input"></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Update Picture (Optional)</label><input
+                        type="file" id="edit-itemPicture" class="form-input" accept="image/*"></div>
+                <div class="flex justify-end space-x-3 mt-4"><button type="button"
+                        class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                        class="btn-primary">Save Changes</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="delete-confirm-modal" class="modal">
+        <div class="modal-content max-w-sm text-center"><span
+                class="material-icons text-5xl text-red-500 mb-4">warning</span>
+            <h3 class="text-xl font-bold mb-2">Are you sure?</h3>
+            <p class="text-gray-600 mb-6">Do you really want to delete this item? This process cannot be undone.</p>
+            <div class="flex justify-center space-x-3"><button type="button"
+                    class="btn-secondary close-modal-btn">Cancel</button><button type="button" id="confirm-delete-btn"
+                    class="btn-primary bg-red-600 hover:bg-red-700">Delete</button></div>
+        </div>
+    </div>
+    <div id="camera-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-center mb-4">Take a Photo</h3>
+            <div class="camera-overlay-container"><video id="camera-feed" class="w-full rounded-md bg-gray-900"
+                    playsinline></video>
+                <div id="id-camera-overlay" class="camera-overlay hidden">
+                    <div class="id-card-cutout"></div>
+                </div>
+            </div><canvas id="photo-canvas" class="hidden"></canvas>
+            <div class="flex justify-center gap-4 mt-4"><button id="take-photo-btn" class="btn-primary"><span
+                        class="material-icons">photo_camera</span>Take Photo</button><button type="button"
+                    class="btn-secondary close-modal-btn">Cancel</button></div>
+        </div>
+    </div>
+    <div id="sms-templates-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Edit SMS Templates</h3>
+            <form id="sms-templates-form" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Sale Confirmation</label><textarea
+                        id="template-sale" class="form-input h-24"
+                        placeholder="Use placeholders like {{itemId}}, {{price}}, {{pointsEarned}}, {{totalPoints}}"></textarea>
+                </div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Credit Sale
+                        Confirmation</label><textarea id="template-credit-sale" class="form-input h-24"
+                        placeholder="Use placeholders like {{paid}}, {{balance}}"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Customer Login</label><textarea
+                        id="template-login" class="form-input h-24" placeholder="Use {{customerName}}"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Installment Update</label><textarea
+                        id="template-installment" class="form-input h-24"
+                        placeholder="Use {{amount}}, {{balance}}"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Payment Reminder</label><textarea
+                        id="template-reminder" class="form-input h-24"
+                        placeholder="Use {{customerName}}, {{balance}}"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Failed Login Attempt</label><textarea
+                        id="template-loginFailed" class="form-input h-24"></textarea></div>
+                <div class="flex justify-between items-center mt-4"><button type="button" id="reset-sms-btn"
+                        class="btn-secondary !bg-yellow-200 !text-yellow-800">Reset</button>
+                    <div class="space-x-3"><button type="button"
+                            class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                            class="btn-primary">Save Templates</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="category-manager-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Manage Categories</h3>
+            <form id="add-category-form" class="flex gap-2 mb-4"><input type="text" id="new-category-name"
+                    class="form-input" placeholder="New category name" required><button type="submit"
+                    class="btn-primary">Add</button></form>
+            <div id="category-list" class="space-y-2"></div>
+            <div class="flex justify-end mt-4"><button type="button"
+                    class="btn-secondary close-modal-btn">Close</button></div>
+        </div>
+    </div>
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">New Customer Registration</h3>
+            <form id="register-form" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Full Name</label><input type="text"
+                        id="register-name" class="form-input" placeholder="සම්පූර්ණ නම" required></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Contact Number</label><input type="tel"
+                        id="register-contact" class="form-input" placeholder="දුරකථන අංකය" required></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Address</label><textarea
+                        id="register-address" class="form-input" placeholder="ලිපිනය"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Workplace (Optional)</label><input
+                        type="text" id="register-workplace" class="form-input" placeholder="සේවා ස්ථානය"></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">Work Address
+                        (Optional)</label><textarea id="register-work-address" class="form-input"
+                        placeholder="සේවා ලිපිනය"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">National ID (Front)</label>
+                    <div class="flex items-center gap-2"><input type="file" id="register-id-front" class="form-input"
+                            accept="image/*" required><button type="button" data-target-input="register-id-front"
+                            data-target-preview="id-front-preview"
+                            class="open-id-camera-btn p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span
+                                class="material-icons">photo_camera</span></button></div><img id="id-front-preview"
+                        class="hidden mt-2 rounded-md max-h-32" />
+                </div>
+                <div><label class="block text-sm font-medium text-gray-600 mb-1">National ID (Back)</label>
+                    <div class="flex items-center gap-2"><input type="file" id="register-id-back" class="form-input"
+                            accept="image/*" required><button type="button" data-target-input="register-id-back"
+                            data-target-preview="id-back-preview"
+                            class="open-id-camera-btn p-2 bg-gray-200 rounded-md hover:bg-gray-300"><span
+                                class="material-icons">photo_camera</span></button></div><img id="id-back-preview"
+                        class="hidden mt-2 rounded-md max-h-32" />
+                </div>
+                <div class="flex items-start mt-4">
+                    <div class="flex items-center h-5"><input id="accept-terms" type="checkbox"
+                            class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"></div>
+                    <div class="ml-3 text-sm"><label for="accept-terms" class="font-medium text-gray-700">I accept the
+                            <a href="#" id="show-terms-link" class="text-indigo-600 hover:underline">Terms and
+                                Conditions</a></label></div>
+                </div>
+                <div id="register-loader" class="hidden justify-center items-center gap-2 mt-4">
+                    <div class="loader"></div><span>Uploading images...</span>
+                </div>
+                <div class="flex justify-end space-x-3 mt-4"><button type="button"
+                        class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                        id="register-submit-btn" class="btn-primary" disabled>Submit Request</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="reject-reason-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Reason for Rejection</h3>
+            <form id="reject-reason-form" class="space-y-4"><input type="hidden" id="reject-request-key"><input
+                    type="hidden" id="reject-customer-contact"><input type="hidden" id="reject-customer-name">
+                <div><label for="reject-reason" class="block text-sm font-medium text-gray-700">Please select a
+                        reason:</label><select id="reject-reason" class="form-input mt-1">
+                        <option value="Photo Pahadili natha">Photo is not clear (පින්තූරය අපැහැදිලියි)</option>
+                        <option value="Thorathuru niwaradi natha">Information is incorrect (තොරතුරු සාවද්‍යයි)</option>
+                    </select></div>
+                <div class="flex justify-end space-x-3 mt-4"><button type="button"
+                        class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                        class="btn-primary bg-red-600 hover:bg-red-700">Confirm Rejection</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Terms and Conditions</h3>
+            <pre id="terms-content" class="whitespace-pre-wrap text-gray-600 font-sans text-sm">Loading terms...</pre>
+            <div class="flex justify-end mt-4"><button type="button"
+                    class="btn-secondary close-modal-btn">Close</button></div>
+        </div>
+    </div>
+    <div id="customer-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-2">Customer Exists</h3>
+            <p class="text-gray-600 mb-4">A customer with this phone number already exists with a different name.</p>
+            <div class="mb-4">
+                <p class="text-sm"><b>Existing Name:</b> <span id="existing-customer-name"></span></p>
+                <p class="text-sm"><b>New Name:</b> <span id="new-customer-name"></span></p>
+            </div>
+            <p class="mb-6">Do you want to update the existing customer's name and proceed with the sale?</p>
+            <div class="flex justify-end gap-3"><button id="cancel-sale-creation-btn"
+                    class="btn-secondary">Cancel</button><button id="update-name-and-proceed-btn"
+                    class="btn-primary">Update & Proceed</button></div>
+        </div>
+    </div>
+    <div id="edit-customer-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Edit Customer Details</h3>
+            <form id="edit-customer-form" class="space-y-4"><input type="hidden" id="edit-customer-key">
+                <div><label class="block text-sm font-medium text-gray-600">Full Name</label><input type="text"
+                        id="edit-customer-name-input" class="form-input"></div>
+                <div><label class="block text-sm font-medium text-gray-600">Address</label><textarea
+                        id="edit-customer-address-input" class="form-input"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-600">Workplace</label><input type="text"
+                        id="edit-customer-workplace-input" class="form-input"></div>
+                <div><label class="block text-sm font-medium text-gray-600">Work Address</label><textarea
+                        id="edit-customer-work-address-input" class="form-input"></textarea></div>
+                <div class="flex justify-end gap-3 mt-4"><button type="button"
+                        class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                        class="btn-primary">Save Changes</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="otp-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold mb-4">Enter OTP</h3>
+            <p class="text-gray-600 mb-4">A 4-digit OTP has been sent to your phone. Please enter it below to request
+                point redemption.</p>
+            <form id="otp-form" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-600">OTP</label><input type="number"
+                        id="otp-input" class="form-input" placeholder="XXXX" required></div>
+                <div class="flex justify-end gap-3 mt-4"><button type="button"
+                        class="btn-secondary close-modal-btn">Cancel</button><button type="submit"
+                        class="btn-primary">Verify OTP</button></div>
+            </form>
+        </div>
+    </div>
 
 
-    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-2 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300"><p id="toast-message"></p></div>
-    
+    <div id="toast"
+        class="fixed bottom-5 right-5 bg-gray-800 text-white py-2 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
+        <p id="toast-message"></p>
+    </div>
+
     <canvas id="barcode-canvas" style="display: none;"></canvas>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -131,11 +814,16 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const storage = firebase.storage();
-        
-        let html5QrCode, currentScannerInput = null, allSalesData = [], capturedImageBlob = null, cameraStream = null, smsTemplates = {}, currentIdCameraTarget = {}, pendingSaleData = null, currentSalesFilter = 'all';
-        
+
+        let html5QrCode, currentScannerInput = null, allSalesData = [], capturedImageBlob = null, cameraStream = null, smsTemplates = {}, currentIdCameraTarget = {}, pendingSaleData = null, currentSalesFilter = 'all', registeredCustomersData = {}, registrationRequestsData = {};
+        let allStockData = [];
+        let stockSortOrder = 'id_asc';
+        let stockFilterCategory = 'all';
+        let stockFilterSupplier = 'all';
+
         const defaultTemplates = {
             saleConfirmation: `Thank you for your purchase at Vinu Bathik!\nItem: {{category}} - {{itemId}}\nPrice: LKR {{price}}\nPoints Earned: {{pointsEarned}}\nTotal Points: {{totalPoints}}\n- Vinu Bathik`,
+            creditSaleConfirmation: `Thank you for purchasing at Vinu Bathik!\nItem: {{category}} - {{itemId}}\nPrice: LKR {{price}}\nPaid: LKR {{paid}}\nBalance: LKR {{balance}}\nPoints: {{pointsEarned}}\nTotal Points: {{totalPoints}}\n- Vinu Bathik`,
             customerLogin: `Hi {{customerName}}, you have successfully logged into your Vinu Bathik account.`,
             installmentUpdate: `Dear Customer, your payment of LKR {{amount}} has been received. Your new outstanding balance is LKR {{balance}}. Thank you. - Vinu Bathik`,
             paymentReminder: `Hi {{customerName}}, this is a friendly reminder from Vinu Bathik about your outstanding payment of LKR {{balance}}. Please make a payment soon. Thank you.`,
@@ -145,7 +833,7 @@
             registrationRejected: `Dear Customer, your registration request with Vinu Bathik has been rejected for the following reason: {{reason}}. Please contact us for more details.`,
             redeemOTP: `Your Vinu Bathik OTP for point redemption is {{otp}}. This code is valid for 5 minutes.`
         };
-        
+
         const defaultTerms = `නියමයන් සහ කොන්දේසි\n\n1. සියලුම විකුණුම් අවසන් වේ.\n2. වාරික ගෙවීම් නියමිත වේලාවට සිදු කළ යුතුය.\n3. කිසියම් ගැටළුවක් සඳහා, කරුණාකර අප හා සම්බන්ධ වන්න.`;
 
         async function loadSmsTemplates() {
@@ -165,7 +853,7 @@
         function showPage(pageId) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(pageId).classList.add('active'); }
         function showToast(message, isError = false) { const t = document.getElementById('toast'); t.children[0].textContent = message; t.classList.remove('opacity-0'); t.style.backgroundColor = isError ? '#ef4444' : '#1f2937'; setTimeout(() => t.classList.add('opacity-0'), 3000); }
         function showTab(tabId) { document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none'); document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active')); document.getElementById(tabId).style.display = 'block'; document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add('active'); }
-        function logout() { 
+        function logout() {
             showPage('login-page');
             document.getElementById('admin-login-form').classList.add('hidden');
             document.getElementById('customer-login-form').classList.remove('hidden');
@@ -173,12 +861,12 @@
         }
 
         document.getElementById('show-admin-login-btn').addEventListener('click', () => { document.getElementById('admin-login-form').classList.remove('hidden'); document.getElementById('customer-login-form').classList.add('hidden'); document.getElementById('show-admin-login-btn').classList.add('hidden'); });
-        document.getElementById('admin-login-btn').addEventListener('click', () => { 
+        document.getElementById('admin-login-btn').addEventListener('click', () => {
             const passwordInput = document.getElementById('admin-password');
-            if (document.getElementById('admin-username').value === 'admin' && passwordInput.value === 'eglviraj') { 
-                showPage('admin-panel'); 
-                fetchAndDisplayStock(); 
-                fetchAndDisplaySales(); 
+            if (document.getElementById('admin-username').value === 'admin' && passwordInput.value === 'a') {
+                showPage('admin-panel');
+                fetchAndDisplayStock();
+                fetchAndDisplaySales();
                 renderStockReport();
                 loadSmsTemplates();
                 loadCategories();
@@ -186,46 +874,72 @@
                 fetchAndDisplayRegisteredCustomers();
                 checkAndSendReminders();
                 displayNextBarcodeRange();
-            } else { 
-                showToast('Invalid admin credentials.', true); 
+            } else {
+                showToast('Invalid admin credentials.', true);
             }
             passwordInput.value = '';
         });
-        document.getElementById('customer-login-btn').addEventListener('click', async () => { 
-            const phone = document.getElementById('customer-phone-login').value.trim(); 
-            if (!phone) return showToast('Please enter phone number.', true); 
-            try { 
-                await loadSmsTemplates(); 
+        document.getElementById('customer-login-btn').addEventListener('click', async () => {
+            const phone = document.getElementById('customer-phone-login').value.trim();
+            if (!phone) return showToast('Please enter phone number.', true);
+            try {
+                await loadSmsTemplates();
                 const customerSnap = await database.ref('customers').child(phone).once('value');
                 if (!customerSnap.exists() || customerSnap.val().status !== 'approved') {
                     const requestSnap = await database.ref('registrationRequests').orderByChild('contact').equalTo(phone).once('value');
                     if (requestSnap.exists()) {
-                         const requestKey = Object.keys(requestSnap.val())[0];
-                         const request = requestSnap.val()[requestKey];
-                         if (request.status === 'pending') return showToast('Your registration is still pending approval.', true);
-                         if (request.status === 'rejected') return showToast(`Your registration was rejected: ${request.rejectReason || ''}`, true);
+                        const requestKey = Object.keys(requestSnap.val())[0];
+                        const request = requestSnap.val()[requestKey];
+                        if (request.status === 'pending') return showToast('Your registration is still pending approval.', true);
+                        if (request.status === 'rejected') return showToast(`Your registration was rejected: ${request.rejectReason || ''}`, true);
                     }
                     return showToast('You are not a registered customer. Please register first.', true);
                 }
 
-                const s = await database.ref('sales').orderByChild('customerContact').equalTo(phone).once('value'); 
-                populateCustomerDashboard(s.val() || {}); 
-                showPage('customer-dashboard'); 
+                const s = await database.ref('sales').orderByChild('customerContact').equalTo(phone).once('value');
+                populateCustomerDashboard(s.val() || {});
+                showPage('customer-dashboard');
                 sendSms(phone, 'customerLogin', { customerName: customerSnap.val().name });
-            } catch (e) { 
+            } catch (e) {
                 console.error("Login Error:", e);
-                showToast("Could not log in.", true); 
+                showToast("Could not log in.", true);
                 sendSms(phone, 'loginFailed', {});
-            } 
+            }
         });
         document.getElementById('admin-logout-btn').addEventListener('click', logout);
         document.getElementById('customer-logout-btn').addEventListener('click', logout);
 
-        function openScanner(inputId) { currentScannerInput = inputId; document.getElementById('scanner-modal').style.display = 'flex'; html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (d) => { if (currentScannerInput) document.getElementById(currentScannerInput).value = d; closeScanner(); showToast(`Scanned: ${d}`); }, (e) => {}).catch(err => console.log('Unable to start scanning.', err)); }
-        function closeScanner() { if (html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().catch(err => {}); } document.getElementById('scanner-modal').style.display = 'none'; }
+        function openScanner(inputId) { currentScannerInput = inputId; document.getElementById('scanner-modal').style.display = 'flex'; html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (d) => { if (currentScannerInput) document.getElementById(currentScannerInput).value = d; closeScanner(); showToast(`Scanned: ${d}`); }, (e) => { }).catch(err => console.log('Unable to start scanning.', err)); }
+        function closeScanner() { if (html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().catch(err => { }); } document.getElementById('scanner-modal').style.display = 'none'; }
         document.getElementById('open-stock-scanner').addEventListener('click', () => openScanner('itemId'));
         document.getElementById('open-sale-scanner').addEventListener('click', () => openScanner('saleItemId'));
         document.getElementById('close-scanner').addEventListener('click', closeScanner);
+
+        // --- Thumbnail Generation ---
+        function generateThumbnail(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 300;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', 0.8);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
         // STOCK MANAGEMENT
         document.getElementById('add-stock-form').addEventListener('submit', async (e) => {
@@ -239,7 +953,7 @@
             if (!price || !cost || !supplier || !imageFile) return showToast("කරුණාකර සියලු ක්ෂේත්‍ර පුරවා පින්තූරයක් එක් කරන්න.", true);
 
             try {
-                if (!itemId) { 
+                if (!itemId) {
                     itemId = database.ref('stock').push().key;
                 } else {
                     const existingItem = await database.ref('stock/' + itemId).once('value');
@@ -247,18 +961,34 @@
                         return showToast('මෙම ID එක දැනටමත් පද්ධතියේ ඇත.', true);
                     }
                 }
-                
-                const ref = storage.ref(`stock-images/${itemId}-${Date.now()}`);
-                const url = await (await ref.put(imageFile)).ref.getDownloadURL();
+
+                const thumbBlob = await generateThumbnail(imageFile);
+                const timestamp = Date.now();
+                const storageRef = storage.ref();
+                const originalPath = `stock-images/${itemId}-${timestamp}`;
+                const thumbPath = `stock-images/${itemId}-${timestamp}_thumb`;
+
+                const [originalSnapshot, thumbSnapshot] = await Promise.all([
+                    storageRef.child(originalPath).put(imageFile),
+                    storageRef.child(thumbPath).put(thumbBlob)
+                ]);
+
+                const [originalUrl, thumbUrl] = await Promise.all([
+                    originalSnapshot.ref.getDownloadURL(),
+                    thumbSnapshot.ref.getDownloadURL()
+                ]);
+
                 const itemData = {
                     itemId,
                     category: category,
                     price: parseFloat(price),
                     cost: parseFloat(cost),
                     supplier,
-                    imageUrl: url,
+                    imageUrl: originalUrl,
+                    thumbUrl: thumbUrl,
                     points: points ? parseInt(points, 10) : 0,
-                    status: 'available'
+                    status: 'available',
+                    dateAdded: new Date().toISOString()
                 };
                 await database.ref('stock/' + itemId).set(itemData);
                 showToast("නව භාණ්ඩය සාර්ථකව ඇතුළත් කරන ලදී!");
@@ -271,78 +1001,178 @@
                 console.error(err);
             }
         });
-        
+
         function handleDoubleClickStock(itemId) { showTab('sales'); document.getElementById('saleItemId').value = itemId; document.getElementById('saleItemId').dispatchEvent(new Event('input')); }
 
         function fetchAndDisplayStock() {
             database.ref('stock').on('value', (s) => {
-                const list = document.getElementById('stock-list');
-                list.innerHTML = '';
                 const stockData = s.val();
                 if (stockData) {
-                    const availableStock = Object.values(stockData)
-                        .filter(item => item.status !== 'sold')
-                        .sort((a,b) => (b.itemId || '').localeCompare(a.itemId || ''));
-
-                    if(availableStock.length === 0) {
-                         list.innerHTML = '<p class="col-span-full text-center text-gray-500">තොගයේ භාණ්ඩ නොමැත.</p>';
-                         return;
-                    }
-                    availableStock.forEach(i => {
-                        list.innerHTML += `<div class="border rounded-lg p-4 bg-white shadow-sm relative group cursor-pointer" ondblclick="handleDoubleClickStock('${i.itemId}')">
-                            <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick='openEditStockModal(${JSON.stringify(i)})' class="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"><span class="material-icons text-sm">edit</span></button>
-                                <button onclick="confirmDeleteStockItem('${i.itemId}', '${i.imageUrl}')" class="p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200"><span class="material-icons text-sm">delete</span></button>
-                            </div>
-                            <img src="${i.imageUrl}" onerror="this.src='https://placehold.co/600x400/e2e8f0/e2e8f0?text=img'" class="w-full h-32 object-cover rounded-md mb-2">
-                            <h3 class="font-bold text-lg">${i.itemId}</h3>
-                            <div class="flex justify-between items-center">
-                                <p class="text-indigo-600 font-semibold">LKR ${i.price.toFixed(2)}</p>
-                                ${i.points ? `<p class="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-full">${i.points} pts</p>` : ''}
-                            </div>
-                            <p class="text-sm text-gray-500 mt-1">Supplier: ${i.supplier}</p>
-                            <p class="text-xs text-gray-400 capitalize">${i.category || 'N/A'}</p>
-                        </div>`;
+                    allStockData = Object.values(stockData);
+                    // Update filter dropdowns with unique values
+                    const categories = new Set();
+                    const suppliers = new Set();
+                    allStockData.forEach(item => {
+                        if (item.category) categories.add(item.category);
+                        if (item.supplier) suppliers.add(item.supplier);
                     });
+
+                    updateFilterDropdown('stock-filter-category', categories);
+                    updateFilterDropdown('stock-filter-supplier', suppliers);
+
+                    renderStockList();
                 } else {
-                    list.innerHTML = '<p class="col-span-full text-center text-gray-500">තොගයේ භාණ්ඩ නොමැත.</p>';
+                    allStockData = [];
+                    renderStockList();
                 }
             });
         }
 
-        function openEditStockModal(item) { 
-            const modal = document.getElementById('edit-stock-modal'); 
-            modal.querySelector('#edit-stock-id').value = item.itemId; 
-            modal.querySelector('#edit-stock-image-url').value = item.imageUrl; 
-            modal.querySelector('#edit-itemId-display').value = item.itemId; 
-            modal.querySelector('#edit-itemCategory').value = item.category || 'saree';
-            modal.querySelector('#edit-itemPrice').value = item.price; 
-            modal.querySelector('#edit-itemCost').value = item.cost; 
-            modal.querySelector('#edit-itemSupplier').value = item.supplier; 
-            modal.querySelector('#edit-itemPoints').value = item.points || ''; 
-            modal.style.display = 'flex'; 
+        function updateFilterDropdown(elementId, values) {
+            const select = document.getElementById(elementId);
+            const currentValue = select.value;
+            // Keep 'all' option
+            select.innerHTML = '<option value="all">All</option>';
+            values.forEach(val => {
+                const option = document.createElement('option');
+                option.value = val;
+                option.textContent = val;
+                select.appendChild(option);
+            });
+            if ([...values, 'all'].includes(currentValue)) {
+                select.value = currentValue;
+            }
         }
-        document.getElementById('edit-stock-form').addEventListener('submit', async (e) => { 
-            e.preventDefault(); 
-            const form = e.target; 
-            const itemId = form['edit-stock-id'].value; 
-            const updatedData = { 
-                price: parseFloat(form['edit-itemPrice'].value), 
-                cost: parseFloat(form['edit-itemCost'].value), 
-                supplier: form['edit-itemSupplier'].value, 
-                points: form['edit-itemPoints'].value ? parseInt(form['edit-itemPoints'].value, 10) : 0,
-                category: form['edit-itemCategory'].value
-            }; 
-            try { 
-                await database.ref('stock/' + itemId).update(updatedData); 
-                showToast('Stock item updated!'); 
-                document.getElementById('edit-stock-modal').style.display = 'none'; 
-            } catch(err) { 
-                showToast('Failed to update item.', true); 
-            } 
+
+        function renderStockList() {
+            const list = document.getElementById('stock-list');
+            list.innerHTML = '';
+
+            let filteredData = allStockData.filter(item => item.status !== 'sold');
+
+            if (stockFilterCategory !== 'all') {
+                filteredData = filteredData.filter(item => item.category === stockFilterCategory);
+            }
+            if (stockFilterSupplier !== 'all') {
+                filteredData = filteredData.filter(item => item.supplier === stockFilterSupplier);
+            }
+
+            filteredData.sort((a, b) => {
+                switch (stockSortOrder) {
+                    case 'id_asc': return (a.itemId || '').localeCompare(b.itemId || '', undefined, { numeric: true });
+                    case 'price_asc': return a.price - b.price;
+                    case 'date_desc': return new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0);
+                    case 'date_asc': return new Date(a.dateAdded || 0) - new Date(b.dateAdded || 0);
+                    default: return 0;
+                }
+            });
+
+            if (filteredData.length === 0) {
+                list.innerHTML = '<p class="col-span-full text-center text-gray-500">තොගයේ භාණ්ඩ නොමැත.</p>';
+                return;
+            }
+
+            filteredData.forEach(i => {
+                const thumb = i.thumbUrl || i.imageUrl;
+                list.innerHTML += `<div class="border rounded-lg p-4 bg-white shadow-sm relative group cursor-pointer" ondblclick="handleDoubleClickStock('${i.itemId}')">
+                    <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick='openEditStockModal(${JSON.stringify(i)})' class="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"><span class="material-icons text-sm">edit</span></button>
+                        <button onclick="confirmDeleteStockItem('${i.itemId}', '${i.imageUrl}', '${i.thumbUrl || ''}')" class="p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200"><span class="material-icons text-sm">delete</span></button>
+                    </div>
+                    <a href="${i.imageUrl}" target="_blank">
+                        <img src="${thumb}" onerror="this.src='https://placehold.co/600x400/e2e8f0/e2e8f0?text=img'" class="w-full h-32 object-cover rounded-md mb-2">
+                    </a>
+                    <h3 class="font-bold text-lg">${i.itemId}</h3>
+                    <div class="flex justify-between items-center">
+                        <p class="text-indigo-600 font-semibold">LKR ${i.price.toFixed(2)}</p>
+                        ${i.points ? `<p class="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-full">${i.points} pts</p>` : ''}
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Supplier: ${i.supplier}</p>
+                    <p class="text-xs text-gray-400 capitalize">${i.category || 'N/A'}</p>
+                </div>`;
+            });
+        }
+
+        document.getElementById('stock-sort').addEventListener('change', (e) => {
+            stockSortOrder = e.target.value;
+            renderStockList();
+        });
+        document.getElementById('stock-filter-category').addEventListener('change', (e) => {
+            stockFilterCategory = e.target.value;
+            renderStockList();
+        });
+        document.getElementById('stock-filter-supplier').addEventListener('change', (e) => {
+            stockFilterSupplier = e.target.value;
+            renderStockList();
         });
 
-        function confirmDeleteStockItem(itemId, imageUrl) {
+
+        function openEditStockModal(item) {
+            const modal = document.getElementById('edit-stock-modal');
+            modal.querySelector('#edit-stock-id').value = item.itemId;
+            modal.querySelector('#edit-stock-image-url').value = item.imageUrl;
+            modal.querySelector('#edit-stock-image-url').dataset.thumbUrl = item.thumbUrl || '';
+            modal.querySelector('#edit-itemId-display').value = item.itemId;
+            modal.querySelector('#edit-itemCategory').value = item.category || 'saree';
+            modal.querySelector('#edit-itemPrice').value = item.price;
+            modal.querySelector('#edit-itemCost').value = item.cost;
+            modal.querySelector('#edit-itemSupplier').value = item.supplier;
+            modal.querySelector('#edit-itemPoints').value = item.points || '';
+            modal.style.display = 'flex';
+        }
+        document.getElementById('edit-stock-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const itemId = form['edit-stock-id'].value;
+            const oldImageUrl = form['edit-stock-image-url'].value;
+            const oldThumbUrl = form['edit-stock-image-url'].dataset.thumbUrl;
+            const file = document.getElementById('edit-itemPicture').files[0];
+
+            let updatedData = {
+                price: parseFloat(form['edit-itemPrice'].value),
+                cost: parseFloat(form['edit-itemCost'].value),
+                supplier: form['edit-itemSupplier'].value,
+                points: form['edit-itemPoints'].value ? parseInt(form['edit-itemPoints'].value, 10) : 0,
+                category: form['edit-itemCategory'].value
+            };
+            try {
+                if (file) {
+                    showToast('Updating image...');
+                    const thumbBlob = await generateThumbnail(file);
+                    const timestamp = Date.now();
+                    const storageRef = storage.ref();
+                    const originalPath = `stock-images/${itemId}-${timestamp}`;
+                    const thumbPath = `stock-images/${itemId}-${timestamp}_thumb`;
+
+                    const [originalSnapshot, thumbSnapshot] = await Promise.all([
+                        storageRef.child(originalPath).put(file),
+                        storageRef.child(thumbPath).put(thumbBlob)
+                    ]);
+
+                    const [originalUrl, thumbUrl] = await Promise.all([
+                        originalSnapshot.ref.getDownloadURL(),
+                        thumbSnapshot.ref.getDownloadURL()
+                    ]);
+
+                    updatedData.imageUrl = originalUrl;
+                    updatedData.thumbUrl = thumbUrl;
+
+                    // Attempt to delete old images if they exist
+                    if (oldImageUrl) storage.refFromURL(oldImageUrl).delete().catch(console.warn);
+                    if (oldThumbUrl) storage.refFromURL(oldThumbUrl).delete().catch(console.warn);
+                }
+
+                await database.ref('stock/' + itemId).update(updatedData);
+                showToast('Stock item updated!');
+                document.getElementById('edit-stock-modal').style.display = 'none';
+                form.reset();
+            } catch (err) {
+                showToast('Failed to update item.', true);
+                console.error(err);
+            }
+        });
+
+        function confirmDeleteStockItem(itemId, imageUrl, thumbUrl) {
             const isItemInSale = allSalesData.some(sale => sale.itemId === itemId);
             if (isItemInSale) {
                 showToast("මෙම භාණ්ඩය විකුණා ඇති බැවින් මැකිය නොහැක.", true);
@@ -350,10 +1180,22 @@
             }
             const modal = document.getElementById('delete-confirm-modal');
             modal.style.display = 'flex';
-            modal.querySelector('#confirm-delete-btn').onclick = () => deleteStockItem(itemId, imageUrl);
+            modal.querySelector('#confirm-delete-btn').onclick = () => deleteStockItem(itemId, imageUrl, thumbUrl);
         }
-        async function deleteStockItem(itemId, imageUrl) { try { await database.ref('stock/' + itemId).remove(); if (imageUrl) { await storage.refFromURL(imageUrl).delete().catch(e => console.warn("Could not delete image, maybe already deleted:", e)); } showToast('Item deleted successfully!'); } catch (err) { showToast('Failed to delete item.', true); console.error(err); } finally { document.getElementById('delete-confirm-modal').style.display = 'none'; } }
-        
+        async function deleteStockItem(itemId, imageUrl, thumbUrl) {
+            try {
+                await database.ref('stock/' + itemId).remove();
+                if (imageUrl) { await storage.refFromURL(imageUrl).delete().catch(e => console.warn("Could not delete image:", e)); }
+                if (thumbUrl) { await storage.refFromURL(thumbUrl).delete().catch(e => console.warn("Could not delete thumbnail:", e)); }
+                showToast('Item deleted successfully!');
+            } catch (err) {
+                showToast('Failed to delete item.', true);
+                console.error(err);
+            } finally {
+                document.getElementById('delete-confirm-modal').style.display = 'none';
+            }
+        }
+
         document.getElementById('open-camera-btn').addEventListener('click', async () => {
             currentIdCameraTarget = null;
             openCamera(blob => {
@@ -372,9 +1214,9 @@
                 currentIdCameraTarget = { input: targetInput, preview: targetPreview };
                 openCamera(blob => {
                     if (currentIdCameraTarget && currentIdCameraTarget.preview) {
-                         const previewEl = document.getElementById(currentIdCameraTarget.preview);
-                         previewEl.src = URL.createObjectURL(blob);
-                         previewEl.classList.remove('hidden');
+                        const previewEl = document.getElementById(currentIdCameraTarget.preview);
+                        previewEl.src = URL.createObjectURL(blob);
+                        previewEl.classList.remove('hidden');
                     }
                     const file = new File([blob], "camera-image.jpg", { type: "image/jpeg" });
                     const dataTransfer = new DataTransfer();
@@ -405,7 +1247,7 @@
                     if (isIdCard) {
                         const overlayRect = document.querySelector('.id-card-cutout').getBoundingClientRect();
                         const videoRect = video.getBoundingClientRect();
-                        
+
                         const scaleX = videoWidth / videoRect.width;
                         const scaleY = videoHeight / videoRect.height;
 
@@ -413,7 +1255,7 @@
                         const cropY = (overlayRect.top - videoRect.top) * scaleY;
                         const cropWidth = overlayRect.width * scaleX;
                         const cropHeight = overlayRect.height * scaleY;
-                        
+
                         canvas.width = cropWidth;
                         canvas.height = cropHeight;
                         canvas.getContext('2d').drawImage(video, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
@@ -422,7 +1264,7 @@
                         canvas.height = videoHeight;
                         canvas.getContext('2d').drawImage(video, 0, 0);
                     }
-                    
+
                     canvas.toBlob(blob => {
                         if (callback) callback(blob);
                     }, 'image/jpeg');
@@ -433,7 +1275,7 @@
                 modal.style.display = 'none';
             }
         }
-        
+
         function closeCamera() { const video = document.getElementById('camera-feed'); if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; video.srcObject = null; } document.getElementById('camera-modal').style.display = 'none'; }
 
         // SALES
@@ -445,18 +1287,19 @@
                 const stockSnap = await database.ref('stock/' + itemId).once('value');
                 if (stockSnap.exists() && stockSnap.val().status !== 'sold') {
                     const item = stockSnap.val();
-                    previewDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${item.imageUrl}" class="w-16 h-16 rounded-md object-cover"><div class="flex-1"> <p class="font-bold">${item.itemId}</p><p class="text-indigo-600">LKR ${item.price.toFixed(2)}</p></div></div>`;
+                    const thumb = item.thumbUrl || item.imageUrl;
+                    previewDiv.innerHTML = `<div class="flex items-center gap-4"><img src="${thumb}" class="w-16 h-16 rounded-md object-cover"><div class="flex-1"> <p class="font-bold">${item.itemId}</p><p class="text-indigo-600">LKR ${item.price.toFixed(2)}</p></div></div>`;
                     previewDiv.classList.remove('hidden');
                 } else {
                     previewDiv.classList.add('hidden');
                 }
             } catch (error) { previewDiv.classList.add('hidden'); }
         });
-        
+
         document.getElementById('customerContact').addEventListener('input', async (e) => {
             const contact = e.target.value.trim();
             const pointsDiv = document.getElementById('customer-points-info');
-            if(contact.length < 9) { pointsDiv.classList.add('hidden'); return; }
+            if (contact.length < 9) { pointsDiv.classList.add('hidden'); return; }
 
             try {
                 const [salesSnap, redeemSnap] = await Promise.all([
@@ -470,14 +1313,39 @@
                 }
 
                 let redeemText = '';
-                if(redeemSnap.exists() && redeemSnap.val().status === 'requested') {
+                if (redeemSnap.exists() && redeemSnap.val().status === 'requested') {
                     redeemText = `<span class="ml-2 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">Requested Points</span>`;
                 }
-                
-                pointsDiv.innerHTML = `<span>Available Points: <b>${totalPoints}</b></span> ${redeemText}`;
+
+                const usePointsBtn = totalPoints > 0 ? `<button type="button" id="admin-use-points-btn" class="ml-4 text-xs bg-indigo-100 text-indigo-700 font-semibold px-2 py-1 rounded-full hover:bg-indigo-200">Use Points</button>` : '';
+
+                pointsDiv.innerHTML = `<span>Available Points: <b>${totalPoints}</b></span> ${redeemText} ${usePointsBtn}`;
                 pointsDiv.classList.remove('hidden');
 
-            } catch(error) {
+                if (totalPoints > 0) {
+                    document.getElementById('admin-use-points-btn').addEventListener('click', async () => {
+                        const itemId = document.getElementById('saleItemId').value;
+                        if (!itemId) {
+                            showToast("Please enter an Item ID first.", true);
+                            return;
+                        }
+                        const stockSnap = await database.ref('stock/' + itemId).once('value');
+                        if (!stockSnap.exists()) {
+                            showToast("Invalid Item ID.", true);
+                            return;
+                        }
+                        const itemPrice = stockSnap.val().price;
+                        const discountAmount = Math.min(itemPrice, totalPoints);
+
+                        document.getElementById('saleDiscount').value = discountAmount;
+                        showToast(`${discountAmount} points applied as discount.`);
+
+                        document.getElementById('add-sale-form').dataset.pointsRedeemed = discountAmount;
+                    });
+                }
+
+
+            } catch (error) {
                 console.error("Error fetching customer points info", error);
                 pointsDiv.classList.add('hidden');
             }
@@ -488,20 +1356,24 @@
             e.preventDefault();
             const form = e.target;
             const itemId = form.saleItemId.value.trim(), name = form.customerName.value.trim(), contact = form.customerContact.value.trim(), type = form.paymentType.value, downpayment = form.downpaymentAmount.value, discount = parseFloat(form.saleDiscount.value) || 0;
-            
+
             if (!itemId || !name || !contact) return showToast("Fill required fields.", true);
 
-            pendingSaleData = { form, itemId, name, contact, type, downpayment, discount };
+            pendingSaleData = { form, itemId, name, contact, type, downpayment, discount, pointsRedeemed: form.dataset.pointsRedeemed || 0 };
+            form.removeAttribute('data-points-redeemed');
 
             try {
                 const customerSnap = await database.ref('customers/' + contact).once('value');
-                if(customerSnap.exists()) {
-                    const existingName = customerSnap.val().name;
-                    if(existingName.toLowerCase() !== name.toLowerCase()) {
+                if (customerSnap.exists()) {
+                    const existingData = customerSnap.val();
+                    const existingName = (existingData && existingData.name) ? String(existingData.name) : '';
+                    if (existingName && existingName.toLowerCase() !== name.toLowerCase()) {
                         document.getElementById('existing-customer-name').textContent = existingName;
                         document.getElementById('new-customer-name').textContent = name;
                         document.getElementById('customer-confirm-modal').style.display = 'flex';
                         return;
+                    } else if (existingData && !existingData.name) {
+                        await database.ref('customers/' + contact).update({ name: name });
                     }
                 } else {
                     await database.ref('customers/' + contact).set({ name, contact, status: 'approved' });
@@ -516,9 +1388,9 @@
 
         async function proceedWithSale() {
             if (!pendingSaleData) return;
-            const { form, itemId, name, contact, type, downpayment, discount } = pendingSaleData;
+            const { form, itemId, name, contact, type, downpayment, discount, pointsRedeemed } = pendingSaleData;
             pendingSaleData = null;
-             try {
+            try {
                 const stockRef = database.ref('stock/' + itemId);
                 const stockSnap = await stockRef.once('value');
                 const stock = stockSnap.val();
@@ -526,9 +1398,9 @@
                 if (!stock || stock.status === 'sold') {
                     return showToast("මෙම භාණ්ඩය තොගයේ නොමැත.", true);
                 }
-                
+
                 let finalPrice = stock.price - discount;
-                if(finalPrice < 0) { return showToast("Discount cannot be more than the price.", true); }
+                if (finalPrice < 0) { return showToast("Discount cannot be more than the price.", true); }
 
                 let pointsAwarded = stock.points || 0;
                 if (discount > 0) {
@@ -536,22 +1408,51 @@
                 }
                 const saleData = { itemId, customerName: name, customerContact: contact, paymentType: type, saleDate: new Date().toISOString(), totalPrice: finalPrice, originalPrice: stock.price, discount: discount, points: pointsAwarded, payments: {}, status: 'complete' };
                 if (type === 'installment') {
-                    const dp = parseFloat(downpayment);
-                    if (!downpayment || dp >= finalPrice || dp < 0) return showToast("Invalid downpayment.", true);
+                    const dp = parseFloat(downpayment) || 0;
+                    if (dp >= finalPrice || dp < 0) return showToast("Invalid downpayment.", true);
                     saleData.payments[database.ref().push().key] = { amount: dp, date: new Date().toISOString() };
                     saleData.status = 'ongoing';
                 } else {
                     saleData.payments[database.ref().push().key] = { amount: finalPrice, date: new Date().toISOString() };
                 }
-                
+
                 await database.ref('sales').push(saleData);
-                await stockRef.update({ status: 'sold' }); 
+                await stockRef.update({ status: 'sold' });
+
+                if (pointsRedeemed > 0) {
+                    const redemptionData = {
+                        customerName: name,
+                        customerContact: contact,
+                        saleDate: new Date().toISOString(),
+                        itemId: `REDEEM_${Date.now()}`,
+                        points: -parseInt(pointsRedeemed),
+                        totalPrice: 0,
+                        paymentType: 'redeem'
+                    };
+                    await database.ref('sales').push(redemptionData);
+                    await database.ref('redeemRequests/' + contact).remove();
+                    showToast(`${pointsRedeemed} points successfully redeemed.`);
+                }
 
                 const customerSalesSnap = await database.ref('sales').orderByChild('customerContact').equalTo(contact).once('value');
                 let totalPoints = 0;
                 if (customerSalesSnap.exists()) { Object.values(customerSalesSnap.val()).forEach(s => { totalPoints += s.points || 0; }); }
 
-                sendSms(contact, 'saleConfirmation', { category: stock.category, itemId: itemId, price: finalPrice.toFixed(2), pointsEarned: stock.points || 0, totalPoints: totalPoints });
+                if (type === 'installment') {
+                    const paid = parseFloat(downpayment) || 0;
+                    const balance = finalPrice - paid;
+                    sendSms(contact, 'creditSaleConfirmation', {
+                        category: stock.category,
+                        itemId: itemId,
+                        price: finalPrice.toFixed(2),
+                        paid: paid.toFixed(2),
+                        balance: balance.toFixed(2),
+                        pointsEarned: pointsAwarded,
+                        totalPoints: totalPoints
+                    });
+                } else {
+                    sendSms(contact, 'saleConfirmation', { category: stock.category, itemId: itemId, price: finalPrice.toFixed(2), pointsEarned: pointsAwarded, totalPoints: totalPoints });
+                }
 
                 showToast("Sale created!");
                 form.reset();
@@ -562,7 +1463,7 @@
         }
 
         document.getElementById('update-name-and-proceed-btn').addEventListener('click', async () => {
-            if(!pendingSaleData) return;
+            if (!pendingSaleData) return;
             const { contact, name } = pendingSaleData;
             try {
                 await database.ref('customers/' + contact).update({ name: name });
@@ -578,33 +1479,33 @@
             document.getElementById('customer-confirm-modal').style.display = 'none';
         });
 
-        async function updatePayment(key, inputId) { 
-            const amountStr = document.getElementById(inputId).value; 
-            const amount = parseFloat(amountStr); 
-            if (isNaN(amount) || amount <= 0) return showToast("Invalid amount.", true); 
-            const saleRef = database.ref('sales/' + key); 
-            try { 
-                const sale = (await saleRef.once('value')).val(); 
-                if (!sale) return showToast("Sale not found.", true); 
-                const totalPaid = Object.values(sale.payments || {}).reduce((sum, p) => sum + p.amount, 0); 
-                if (totalPaid + amount > sale.totalPrice) return showToast("Payment exceeds balance.", true); 
-                
-                await database.ref(`sales/${key}/payments`).push({ amount: amount, date: new Date().toISOString() }); 
+        async function updatePayment(key, inputId) {
+            const amountStr = document.getElementById(inputId).value;
+            const amount = parseFloat(amountStr);
+            if (isNaN(amount) || amount <= 0) return showToast("Invalid amount.", true);
+            const saleRef = database.ref('sales/' + key);
+            try {
+                const sale = (await saleRef.once('value')).val();
+                if (!sale) return showToast("Sale not found.", true);
+                const totalPaid = Object.values(sale.payments || {}).reduce((sum, p) => sum + p.amount, 0);
+                if (totalPaid + amount > sale.totalPrice) return showToast("Payment exceeds balance.", true);
+
+                await database.ref(`sales/${key}/payments`).push({ amount: amount, date: new Date().toISOString() });
                 const newTotalPaid = totalPaid + amount;
                 const newBalance = sale.totalPrice - newTotalPaid;
 
-                if (newTotalPaid >= sale.totalPrice) { await saleRef.update({ status: 'complete' }); } 
-                showToast("Payment updated!"); 
+                if (newTotalPaid >= sale.totalPrice) { await saleRef.update({ status: 'complete' }); }
+                showToast("Payment updated!");
                 sendSms(sale.customerContact, 'installmentUpdate', { amount: amount.toFixed(2), balance: newBalance.toFixed(2) });
-            } catch (e) { showToast("Failed to update.", true); } 
+            } catch (e) { showToast("Failed to update.", true); }
         }
-        
+
         const editSaleModal = document.getElementById('edit-sale-modal');
         function openEditModal(key, name, contact) { editSaleModal.querySelector('#edit-sale-key').value = key; editSaleModal.querySelector('#edit-customerName').value = name; editSaleModal.querySelector('#edit-customerContact').value = contact; editSaleModal.style.display = 'flex'; }
         document.getElementById('edit-sale-form').addEventListener('submit', async (e) => { e.preventDefault(); const key = e.target['edit-sale-key'].value; const name = e.target['edit-customerName'].value; const contact = e.target['edit-customerContact'].value; await database.ref(`sales/${key}`).update({ customerName: name, customerContact: contact }); showToast('Customer info updated!'); editSaleModal.style.display = 'none'; });
 
-        function fetchAndDisplaySales() { database.ref('sales').on('value', async (snap) => { const stock = (await database.ref('stock').once('value')).val(); allSalesData = []; if (snap.val() && stock) { for(const key in snap.val()){ const sale = snap.val()[key]; if(stock[sale.itemId]) allSalesData.push({ key, ...sale, itemDetails: stock[sale.itemId] }); } allSalesData.reverse(); filterAndRenderSales(); let totalOutstanding = 0, cashInHand = 0; allSalesData.forEach(s => { const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0); cashInHand += totalPaid; if (s.status === 'ongoing') { totalOutstanding += s.totalPrice - totalPaid; } }); document.getElementById('report-total-outstanding').textContent = `LKR ${totalOutstanding.toFixed(2)}`; document.getElementById('report-cash-in-hand').textContent = `LKR ${cashInHand.toFixed(2)}`; } else { document.getElementById('sales-list').innerHTML = '<p>No sales found.</p>'; } }); }
-        
+        function fetchAndDisplaySales() { database.ref('sales').on('value', async (snap) => { const stock = (await database.ref('stock').once('value')).val(); allSalesData = []; if (snap.val() && stock) { for (const key in snap.val()) { const sale = snap.val()[key]; if (sale.itemDetails || (stock[sale.itemId])) { sale.itemDetails = sale.itemDetails || stock[sale.itemId]; allSalesData.push({ key, ...sale }); } } allSalesData.reverse(); filterAndRenderSales(); let totalOutstanding = 0, cashInHand = 0; allSalesData.forEach(s => { const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0); if (s.status !== 'refunded') { cashInHand += totalPaid; } if (s.status === 'ongoing') { totalOutstanding += s.totalPrice - totalPaid; } }); document.getElementById('report-total-outstanding').textContent = `LKR ${totalOutstanding.toFixed(2)}`; document.getElementById('report-cash-in-hand').textContent = `LKR ${cashInHand.toFixed(2)}`; } else { document.getElementById('sales-list').innerHTML = '<p>No sales found.</p>'; } }); }
+
         function filterAndRenderSales() {
             let filtered = allSalesData;
             if (currentSalesFilter !== 'all') {
@@ -613,20 +1514,24 @@
             renderSales(filtered);
         }
 
-        function renderSales(sales) { 
+        function renderSales(sales) {
             const list = document.getElementById('sales-list');
             document.getElementById('sales-count').textContent = `(${sales.length} items)`;
-            list.innerHTML = ''; 
-            if (sales.length === 0) { list.innerHTML = '<p>No matching sales.</p>'; return; } 
-            sales.forEach(s => { 
-                const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0); 
-                const isComplete = s.status === 'complete'; 
-                let paymentInfo = '', paymentHistory = '', reportBtn = ''; 
-                if(s.payments) { paymentHistory = `<div class="text-xs text-gray-500 mt-2 space-y-1">` + Object.values(s.payments).map(p => `<div>- Paid LKR ${p.amount.toFixed(2)} on ${new Date(p.date).toLocaleDateString()}</div>`).join('') + `</div>`; } 
-                if (!isComplete) { const rem = s.totalPrice - totalPaid; paymentInfo = `<p class="text-sm text-red-600 font-semibold mt-2">Rem: LKR ${rem.toFixed(2)}</p><div class="mt-2 flex flex-wrap gap-2 items-center"><input type="number" id="payment-${s.key}" class="form-input flex-1 min-w-[120px]" placeholder="මුදල"><button onclick="updatePayment('${s.key}', 'payment-${s.key}')" class="btn-primary !px-3 !py-2 flex-shrink-0"><span class="material-icons">payment</span></button></div>`; reportBtn = `<button title="Generate Report" class="text-gray-400 hover:text-indigo-600"><span class="material-icons">description</span></button>`;} 
+            list.innerHTML = '';
+            if (sales.length === 0) { list.innerHTML = '<p>No matching sales.</p>'; return; }
+            sales.forEach(s => {
+                const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0);
+                const isComplete = s.status === 'complete';
+                const isRefunded = s.status === 'refunded';
+                let paymentInfo = '', paymentHistory = '', reportBtn = '', refundBtn = '';
+                if (s.payments) { paymentHistory = `<div class="text-xs text-gray-500 mt-2 space-y-1">` + Object.values(s.payments).map(p => `<div>- Paid LKR ${p.amount.toFixed(2)} on ${new Date(p.date).toLocaleDateString()}</div>`).join('') + `</div>`; }
+                if (!isComplete && !isRefunded) { const rem = s.totalPrice - totalPaid; paymentInfo = `<p class="text-sm text-red-600 font-semibold mt-2">Rem: LKR ${rem.toFixed(2)}</p><div class="mt-2 flex flex-wrap gap-2 items-center"><input type="number" id="payment-${s.key}" class="form-input flex-1 min-w-[120px]" placeholder="මුදල"><button onclick="updatePayment('${s.key}', 'payment-${s.key}')" class="btn-primary !px-3 !py-2 flex-shrink-0"><span class="material-icons">payment</span></button></div>`; reportBtn = `<button title="Generate Report" class="text-gray-400 hover:text-indigo-600"><span class="material-icons">description</span></button>`; }
+                if (!isRefunded) { refundBtn = `<button onclick="confirmRefundSale('${s.key}', '${s.itemId}')" class="text-gray-400 hover:text-red-600 ml-2" title="Refund Sale"><span class="material-icons">assignment_return</span></button>`; }
                 const pointsDisplay = s.points ? `<p class="text-xs font-bold text-amber-600">${s.points} pts</p>` : '';
-                list.innerHTML += `<div class="flex items-start p-4 border rounded-lg bg-white space-x-4"><img src="${s.itemDetails.imageUrl}" onerror="this.src='https://placehold.co/600x400/e2e8f0/e2e8f0?text=img'" class="w-20 h-20 object-cover rounded-md flex-shrink-0"><div class="flex-grow"><div><div class="flex justify-between items-center"><h4 class="font-bold">${s.customerName}</h4><div class="flex items-center gap-2">${pointsDisplay}<span class="px-2 py-1 text-xs font-semibold rounded-full ${isComplete ? 'text-green-800 bg-green-200' : 'text-yellow-800 bg-yellow-200'}">${s.status}</span>${reportBtn}</div></div><button onclick="openEditModal('${s.key}', '${s.customerName}', '${s.customerContact}')" class="text-xs text-indigo-500 hover:underline">edit</button></div><p class="text-sm text-gray-600">${s.customerContact}</p><p class="text-sm font-mono bg-gray-100 inline-block px-2 py-0.5 rounded mt-1">${s.itemId}</p>${paymentHistory}${paymentInfo}</div></div>`; 
-            }); 
+                const thumb = s.itemDetails.thumbUrl || s.itemDetails.imageUrl;
+                let statusClass = isComplete ? 'text-green-800 bg-green-200' : (isRefunded ? 'text-gray-800 bg-gray-200' : 'text-yellow-800 bg-yellow-200');
+                list.innerHTML += `<div class="flex items-start p-4 border rounded-lg bg-white space-x-4"><a href="${s.itemDetails.imageUrl}" target="_blank"><img src="${thumb}" onerror="this.src='https://placehold.co/600x400/e2e8f0/e2e8f0?text=img'" class="w-20 h-20 object-cover rounded-md flex-shrink-0"></a><div class="flex-grow"><div><div class="flex justify-between items-center"><h4 class="font-bold">${s.customerName}</h4><div class="flex items-center gap-2">${pointsDisplay}<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">${s.status}</span>${reportBtn}${refundBtn}</div></div><button onclick="openEditModal('${s.key}', '${s.customerName}', '${s.customerContact}')" class="text-xs text-indigo-500 hover:underline">edit</button></div><p class="text-sm text-gray-600">${s.customerContact}</p><p class="text-sm font-mono bg-gray-100 inline-block px-2 py-0.5 rounded mt-1">${s.itemId}</p>${paymentHistory}${paymentInfo}</div></div>`;
+            });
         }
 
         document.getElementById('sales-search').addEventListener('input', (e) => { const term = e.target.value.toLowerCase(); renderSales(allSalesData.filter(s => s.customerName.toLowerCase().includes(term) || s.customerContact.toLowerCase().includes(term) || s.itemId.toLowerCase().includes(term))); });
@@ -637,6 +1542,7 @@
                 <button data-filter="all" class="filter-btn active">All</button>
                 <button data-filter="ongoing" class="filter-btn">Ongoing</button>
                 <button data-filter="complete" class="filter-btn">Complete</button>
+                <button data-filter="refunded" class="filter-btn">Refunded</button>
             `;
             container.addEventListener('click', e => {
                 if (e.target.tagName === 'BUTTON') {
@@ -649,14 +1555,28 @@
         }
         setupSalesFilters();
 
-        async function populateCustomerDashboard(data) { const list = document.getElementById('customer-sales-list'); list.innerHTML = ''; let name, contact, outstanding = 0, totalPoints = 0; const stock = (await database.ref('stock').once('value')).val() || {}; const customerSnap = await database.ref('customers').child(Object.values(data)[0]?.customerContact || 'none').once('value'); const customerData = customerSnap.val() || { name: 'Customer', contact: 'N/A' }; name = customerData.name; contact = customerData.contact; document.getElementById('customer-welcome-name').textContent = `Welcome, ${name}`; document.getElementById('customer-info-contact').textContent = contact; const sales = Object.values(data).reverse(); sales.forEach(s => { const item = stock[s.itemId]; if (!item) return; if(s.points) { totalPoints += s.points; } const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0); let balanceInfo = ''; if (s.status === 'ongoing') { const bal = s.totalPrice - totalPaid; outstanding += bal; balanceInfo = `<p class="text-sm font-semibold text-red-600 mt-2">Balance: LKR ${bal.toFixed(2)}</p>`; } const pointsDisplay = s.points ? `<p class="text-sm font-semibold text-amber-600 mt-2">${s.points} Points Earned</p>` : ''; let paymentHistory = `<div class="text-xs text-gray-500 mt-2 space-y-1 border-t pt-2">` + Object.values(s.payments || {}).map(p => `<div>- Paid LKR ${p.amount.toFixed(2)} on ${new Date(p.date).toLocaleDateString()}</div>`).join('') + `</div>`; list.innerHTML += `<div class="flex items-start p-4 border rounded-lg bg-white space-x-4"><img src="${item.imageUrl}" onerror="this.src='https://placehold.co/600x400/e2e8f0/e2e8f0?text=img'" class="w-20 h-20 object-cover rounded-md flex-shrink-0"><div class="flex-grow"><div class="flex justify-between items-center"><h4 class="font-bold">${item.itemId}</h4><span class="text-lg font-semibold text-indigo-600">LKR ${s.totalPrice.toFixed(2)}</span></div><p class="text-sm text-gray-500">Purchased: ${new Date(s.saleDate).toLocaleDateString()}</p>${balanceInfo}${pointsDisplay}${paymentHistory}</div></div>`; }); document.getElementById('total-points-amount').textContent = `${totalPoints} Points`; const card = document.getElementById('outstanding-balance-card'); if(outstanding > 0) { card.querySelector('p').textContent = `LKR ${outstanding.toFixed(2)}`; card.classList.remove('hidden'); } else { card.classList.add('hidden'); } }
+        async function confirmRefundSale(key, itemId) {
+            if (confirm("Are you sure you want to refund this sale? The item will be returned to stock.")) {
+                try {
+                    await database.ref('sales/' + key).update({ status: 'refunded' });
+                    await database.ref('stock/' + itemId).update({ status: 'available' });
+                    showToast('Sale refunded and item returned to stock.');
+                } catch (error) {
+                    showToast('Failed to refund sale.', true);
+                    console.error(error);
+                }
+            }
+        }
+
+        async function populateCustomerDashboard(data) { const list = document.getElementById('customer-sales-list'); list.innerHTML = ''; let name, contact, outstanding = 0, totalPoints = 0; const stock = (await database.ref('stock').once('value')).val() || {}; const customerSnap = await database.ref('customers').child(Object.values(data)[0]?.customerContact || 'none').once('value'); const customerData = customerSnap.val() || { name: 'Customer', contact: 'N/A' }; name = customerData.name; contact = customerData.contact; document.getElementById('customer-welcome-name').textContent = `Welcome, ${name}`; document.getElementById('customer-info-contact').textContent = contact; const sales = Object.values(data).reverse(); sales.forEach(s => { const item = stock[s.itemId]; if (!item) return; if (s.status === 'refunded') return; if (s.points) { totalPoints += s.points; } const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0); let balanceInfo = ''; if (s.status === 'ongoing') { const bal = s.totalPrice - totalPaid; outstanding += bal; balanceInfo = `<p class="text-sm font-semibold text-red-600 mt-2">Balance: LKR ${bal.toFixed(2)}</p>`; } const pointsDisplay = s.points ? `<p class="text-sm font-semibold text-amber-600 mt-2">${s.points} Points Earned</p>` : ''; let paymentHistory = `<div class="text-xs text-gray-500 mt-2 space-y-1 border-t pt-2">` + Object.values(s.payments || {}).map(p => `<div>- Paid LKR ${p.amount.toFixed(2)} on ${new Date(p.date).toLocaleDateString()}</div>`).join('') + `</div>`; const thumb = item.thumbUrl || item.imageUrl; list.innerHTML += `<div class="flex items-start p-4 border rounded-lg bg-white space-x-4"><a href="${item.imageUrl}" target="_blank"><img src="${thumb}" onerror="this.src='https://placehold.co/600x400/e2e8f0/e2e8f0?text=img'" class="w-20 h-20 object-cover rounded-md flex-shrink-0"></a><div class="flex-grow"><div class="flex justify-between items-center"><h4 class="font-bold">${item.itemId}</h4><span class="text-lg font-semibold text-indigo-600">LKR ${s.totalPrice.toFixed(2)}</span></div><p class="text-sm text-gray-500">Purchased: ${new Date(s.saleDate).toLocaleDateString()}</p>${balanceInfo}${pointsDisplay}${paymentHistory}</div></div>`; }); document.getElementById('total-points-amount').textContent = `${totalPoints} Points`; const card = document.getElementById('outstanding-balance-card'); if (outstanding > 0) { card.querySelector('p').textContent = `LKR ${outstanding.toFixed(2)}`; card.classList.remove('hidden'); } else { card.classList.add('hidden'); } }
 
         // REDEEM POINTS
         document.getElementById('redeem-points-btn').addEventListener('click', async () => {
             const contact = document.getElementById('customer-info-contact').textContent;
-            if(!contact) return showToast("Could not find contact number.", true);
-            
+            if (!contact) return showToast("Could not find contact number.", true);
+
             try {
+                await loadSmsTemplates();
                 const otp = Math.floor(1000 + Math.random() * 9000);
                 const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
                 await database.ref('redeemRequests/' + contact).set({ otp, expiry, status: 'pending' });
@@ -679,7 +1599,7 @@
                 const snapshot = await reqRef.once('value');
                 const request = snapshot.val();
 
-                if(request && request.otp == otp && Date.now() < request.expiry) {
+                if (request && request.otp == otp && Date.now() < request.expiry) {
                     await reqRef.update({ status: 'requested' });
                     showToast("OTP verified! Redemption requested.");
                     document.getElementById('otp-modal').style.display = 'none';
@@ -695,12 +1615,175 @@
         });
 
 
-        async function generateReport(period) { const sales = (await database.ref('sales').once('value')).val() || {}; const stock = (await database.ref('stock').once('value')).val() || {}; const now = new Date(); const filtered = Object.values(sales).filter(s => { const d = new Date(s.saleDate); if (period === 'daily') return d.toDateString() === now.toDateString(); if (period === 'monthly') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); if (period === 'annually') return d.getFullYear() === now.getFullYear(); return false; }); let totalSales = filtered.length, revenue = 0, cost = 0; filtered.forEach(s => { revenue += s.totalPrice; if (stock[s.itemId]) cost += stock[s.itemId].cost; }); document.getElementById('report-title').textContent = `${period.charAt(0).toUpperCase() + period.slice(1)} Report`; document.getElementById('report-total-sales').textContent = totalSales; document.getElementById('report-total-revenue').textContent = `LKR ${revenue.toFixed(2)}`; document.getElementById('report-total-cost').textContent = `LKR ${cost.toFixed(2)}`; document.getElementById('report-total-profit').textContent = `LKR ${(revenue - cost).toFixed(2)}`; }
+        async function generateReport(period) { const sales = (await database.ref('sales').once('value')).val() || {}; const stock = (await database.ref('stock').once('value')).val() || {}; const now = new Date(); const filtered = Object.values(sales).filter(s => { const d = new Date(s.saleDate); if (period === 'daily') return d.toDateString() === now.toDateString(); if (period === 'monthly') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); if (period === 'annually') return d.getFullYear() === now.getFullYear(); return false; }); let totalSales = 0, revenue = 0, cost = 0; filtered.forEach(s => { if (s.status !== 'refunded') { totalSales++; revenue += s.totalPrice; if (stock[s.itemId]) cost += stock[s.itemId].cost; } }); document.getElementById('report-title').textContent = `${period.charAt(0).toUpperCase() + period.slice(1)} Report`; document.getElementById('report-total-sales').textContent = totalSales; document.getElementById('report-total-revenue').textContent = `LKR ${revenue.toFixed(2)}`; document.getElementById('report-total-cost').textContent = `LKR ${cost.toFixed(2)}`; document.getElementById('report-total-profit').textContent = `LKR ${(revenue - cost).toFixed(2)}`; document.getElementById('custom-monthly-details-container').classList.add('hidden'); }
         document.getElementById('report-daily').addEventListener('click', () => generateReport('daily')); document.getElementById('report-monthly').addEventListener('click', () => generateReport('monthly')); document.getElementById('report-annually').addEventListener('click', () => generateReport('annually'));
-        
+
+        async function generateCustomMonthlyReport() {
+            const monthSelector = document.getElementById('custom-month-selector').value;
+            if (!monthSelector) {
+                showToast("Please select a month first.", true);
+                return;
+            }
+
+            showToast("Generating custom report...");
+            const [yearStr, monthStr] = monthSelector.split('-');
+            const targetYear = parseInt(yearStr);
+            const targetMonth = parseInt(monthStr) - 1; // JS months are 0-indexed
+
+            const sales = (await database.ref('sales').once('value')).val() || {};
+            const stock = (await database.ref('stock').once('value')).val() || {};
+
+            const filteredSales = Object.values(sales).filter(s => {
+                if (s.status === 'refunded') return false;
+                const d = new Date(s.saleDate);
+                return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+            });
+
+            // Update Aggregate numbers
+            let totalSalesCount = 0, revenue = 0, cost = 0, outstanding = 0, cashInHand = 0;
+
+            filteredSales.forEach(s => {
+                totalSalesCount++;
+                revenue += s.totalPrice;
+                if (stock[s.itemId]) {
+                    cost += stock[s.itemId].cost;
+                }
+
+                const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0);
+                cashInHand += totalPaid;
+                if (s.status === 'ongoing') {
+                    outstanding += (s.totalPrice - totalPaid);
+                }
+            });
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('report-title').textContent = `${monthNames[targetMonth]} ${targetYear} Report`;
+            document.getElementById('report-total-sales').textContent = totalSalesCount;
+            document.getElementById('report-total-revenue').textContent = `LKR ${revenue.toFixed(2)}`;
+            document.getElementById('report-total-cost').textContent = `LKR ${cost.toFixed(2)}`;
+            document.getElementById('report-total-profit').textContent = `LKR ${(revenue - cost).toFixed(2)}`;
+            document.getElementById('report-total-outstanding').textContent = `LKR ${outstanding.toFixed(2)}`;
+            document.getElementById('report-cash-in-hand').textContent = `LKR ${cashInHand.toFixed(2)}`;
+
+            // Populate Details Table
+            const detailsContainer = document.getElementById('custom-monthly-details-container');
+            const detailsList = document.getElementById('custom-monthly-details-list');
+            document.getElementById('custom-monthly-details-title').textContent = `Detailed Sales for ${monthNames[targetMonth]} ${targetYear}`;
+            detailsList.innerHTML = '';
+
+            if (filteredSales.length === 0) {
+                detailsList.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">No sales found for this month.</td></tr>';
+            } else {
+                // Sort by date ascending
+                filteredSales.sort((a, b) => new Date(a.saleDate) - new Date(b.saleDate));
+
+                filteredSales.forEach(s => {
+                    const dateStr = new Date(s.saleDate).toLocaleDateString();
+                    const discount = s.discount || 0;
+                    const origPrice = s.originalPrice || (s.totalPrice + discount);
+                    let statusClass = s.status === 'complete' ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100';
+
+                    detailsList.innerHTML += `
+                        <tr class="border-b transition duration-300 ease-in-out hover:bg-gray-50">
+                            <td class="py-3 px-4">${dateStr}</td>
+                            <td class="py-3 px-4 font-mono text-xs bg-gray-50 rounded">${s.itemId}</td>
+                            <td class="py-3 px-4 font-medium">${s.customerName}</td>
+                            <td class="py-3 px-4 text-right">LKR ${origPrice.toFixed(2)}</td>
+                            <td class="py-3 px-4 text-right text-red-500">${discount > 0 ? '-' + discount.toFixed(2) : '0.00'}</td>
+                            <td class="py-3 px-4 text-right font-bold text-indigo-600">LKR ${s.totalPrice.toFixed(2)}</td>
+                            <td class="py-3 px-4 text-center"><span class="px-2 py-1 text-xs rounded-full ${statusClass}">${s.status}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            detailsContainer.classList.remove('hidden');
+        }
+
+        document.getElementById('report-custom-month-btn').addEventListener('click', generateCustomMonthlyReport);
+
+        async function generateCustomAnnualReport() {
+            const yearSelector = document.getElementById('custom-year-selector').value;
+            if (!yearSelector) {
+                showToast("Please enter a year first.", true);
+                return;
+            }
+
+            showToast("Generating custom year report...");
+            const targetYear = parseInt(yearSelector);
+
+            const sales = (await database.ref('sales').once('value')).val() || {};
+            const stock = (await database.ref('stock').once('value')).val() || {};
+
+            const filteredSales = Object.values(sales).filter(s => {
+                if (s.status === 'refunded') return false;
+                const d = new Date(s.saleDate);
+                return d.getFullYear() === targetYear;
+            });
+
+            // Update Aggregate numbers
+            let totalSalesCount = 0, revenue = 0, cost = 0, outstanding = 0, cashInHand = 0;
+
+            filteredSales.forEach(s => {
+                totalSalesCount++;
+                revenue += s.totalPrice;
+                if (stock[s.itemId]) {
+                    cost += stock[s.itemId].cost;
+                }
+
+                const totalPaid = Object.values(s.payments || {}).reduce((sum, p) => sum + p.amount, 0);
+                cashInHand += totalPaid;
+                if (s.status === 'ongoing') {
+                    outstanding += (s.totalPrice - totalPaid);
+                }
+            });
+
+            document.getElementById('report-title').textContent = `${targetYear} Annual Report`;
+            document.getElementById('report-total-sales').textContent = totalSalesCount;
+            document.getElementById('report-total-revenue').textContent = `LKR ${revenue.toFixed(2)}`;
+            document.getElementById('report-total-cost').textContent = `LKR ${cost.toFixed(2)}`;
+            document.getElementById('report-total-profit').textContent = `LKR ${(revenue - cost).toFixed(2)}`;
+            document.getElementById('report-total-outstanding').textContent = `LKR ${outstanding.toFixed(2)}`;
+            document.getElementById('report-cash-in-hand').textContent = `LKR ${cashInHand.toFixed(2)}`;
+
+            // Populate Details Table
+            const detailsContainer = document.getElementById('custom-monthly-details-container');
+            const detailsList = document.getElementById('custom-monthly-details-list');
+            document.getElementById('custom-monthly-details-title').textContent = `Detailed Sales for ${targetYear}`;
+            detailsList.innerHTML = '';
+
+            if (filteredSales.length === 0) {
+                detailsList.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">No sales found for this year.</td></tr>';
+            } else {
+                // Sort by date ascending
+                filteredSales.sort((a, b) => new Date(a.saleDate) - new Date(b.saleDate));
+
+                filteredSales.forEach(s => {
+                    const dateStr = new Date(s.saleDate).toLocaleDateString();
+                    const discount = s.discount || 0;
+                    const origPrice = s.originalPrice || (s.totalPrice + discount);
+                    let statusClass = s.status === 'complete' ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100';
+
+                    detailsList.innerHTML += `
+                        <tr class="border-b transition duration-300 ease-in-out hover:bg-gray-50">
+                            <td class="py-3 px-4">${dateStr}</td>
+                            <td class="py-3 px-4 font-mono text-xs bg-gray-50 rounded">${s.itemId}</td>
+                            <td class="py-3 px-4 font-medium">${s.customerName}</td>
+                            <td class="py-3 px-4 text-right">LKR ${origPrice.toFixed(2)}</td>
+                            <td class="py-3 px-4 text-right text-red-500">${discount > 0 ? '-' + discount.toFixed(2) : '0.00'}</td>
+                            <td class="py-3 px-4 text-right font-bold text-indigo-600">LKR ${s.totalPrice.toFixed(2)}</td>
+                            <td class="py-3 px-4 text-center"><span class="px-2 py-1 text-xs rounded-full ${statusClass}">${s.status}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            detailsContainer.classList.remove('hidden');
+        }
+
+        document.getElementById('report-custom-year-btn').addEventListener('click', generateCustomAnnualReport);
+
         const pad = (str, len) => String(str).padEnd(len);
-        function downloadFile(content, filename) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], {type: "text/plain"})); a.setAttribute('download', filename); a.click(); }
-        document.getElementById('download-transactions-btn').addEventListener('click', () => { 
+        function downloadFile(content, filename) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type: "text/plain" })); a.setAttribute('download', filename); a.click(); }
+        document.getElementById('download-transactions-btn').addEventListener('click', () => {
             let content = 'Transaction Report\n====================\n\n';
             content += `${pad('No.', 5)}${pad('Date', 22)}${pad('Item ID', 15)}${pad('Customer Name', 25)}${pad('Amount', 15)}${pad('Status', 12)}Outstanding\n`;
             content += '-'.repeat(115) + '\n';
@@ -710,30 +1793,30 @@
                 const outstanding = s.status === 'ongoing' ? (s.totalPrice - totalPaid).toFixed(2) : '0.00';
                 content += `${pad(index + 1, 5)}${pad(dateStr, 22)}${pad(s.itemId, 15)}${pad(s.customerName, 25)}${pad('LKR ' + s.totalPrice.toFixed(2), 15)}${pad(s.status, 12)}LKR ${outstanding}\n`;
             });
-            downloadFile(content, 'transactions.txt'); 
+            downloadFile(content, 'transactions.txt');
         });
         document.getElementById('download-stock-btn').addEventListener('click', async () => { const stock = (await database.ref('stock').once('value')).val() || {}; let content = 'Stock Report\n==============\n\nID\t\tPrice\t\tSupplier\n--------------------------------\n'; Object.values(stock).filter(i => i.status !== 'sold').forEach(i => { content += `${i.itemId}\t\tLKR ${i.price.toFixed(2)}\t\t${i.supplier}\n`; }); downloadFile(content, 'stock_report.txt'); });
-        
-        async function renderStockReport() { 
+
+        async function renderStockReport() {
             const stock = (await database.ref('stock').once('value')).val() || {};
             const stockItems = Object.values(stock).filter(item => item.status !== 'sold');
-            
+
             let totalCostValue = 0, potentialProfit = 0, totalSellingPrice = 0;
-            const list = document.getElementById('stock-report-list'); 
-            list.innerHTML = `<div class="grid grid-cols-4 font-bold border-b pb-2"><p>No.</p><p>Item ID</p><p>Price</p><p>Supplier</p></div>`; 
-            
-            stockItems.forEach((i, index) => { 
+            const list = document.getElementById('stock-report-list');
+            list.innerHTML = `<div class="grid grid-cols-4 font-bold border-b pb-2"><p>No.</p><p>Item ID</p><p>Price</p><p>Supplier</p></div>`;
+
+            stockItems.forEach((i, index) => {
                 totalCostValue += i.cost;
                 potentialProfit += (i.price - i.cost);
                 totalSellingPrice += i.price;
-                list.innerHTML += `<div class="grid grid-cols-4 py-1 border-b"><p>${index + 1}</p><p>${i.itemId}</p><p>LKR ${i.price.toFixed(2)}</p><p>${i.supplier}</p></div>`; 
-            }); 
-            
+                list.innerHTML += `<div class="grid grid-cols-4 py-1 border-b"><p>${index + 1}</p><p>${i.itemId}</p><p>LKR ${i.price.toFixed(2)}</p><p>${i.supplier}</p></div>`;
+            });
+
             document.getElementById('total-stock-value').textContent = `LKR ${totalCostValue.toFixed(2)}`;
             document.getElementById('potential-profit').textContent = `LKR ${potentialProfit.toFixed(2)}`;
             document.getElementById('total-stock-selling-price').textContent = `LKR ${totalSellingPrice.toFixed(2)}`;
         }
-        
+
         async function displayNextBarcodeRange() {
             const rangeSpan = document.getElementById('next-barcode-range');
             try {
@@ -753,7 +1836,7 @@
                 const configRef = database.ref('config/lastBarcode');
                 const snapshot = await configRef.once('value');
                 let lastBarcode = snapshot.val() || 100;
-                
+
                 const startNumber = lastBarcode + 1;
                 const barcodesPerPage = 55;
                 const endNumber = startNumber + barcodesPerPage - 1;
@@ -780,14 +1863,14 @@
         }
         document.getElementById('print-barcodes-btn').addEventListener('click', generateBarcodePDF);
 
-        //const TEXTBEE_API_KEY = '810d145b-29db-427a-a810-3a12cdfbacdf'; // nokia3.1 plus
-        //const TEXTBEE_DEVICE_ID = '68d8b92eceb77880de829b26'; // nokia 3.1 plus
-        const TEXTBEE_API_KEY = 'f85b579f-b794-4d22-89f7-612554c79839'; // samsung M 11
-        const TEXTBEE_DEVICE_ID = '68f9e8f0d9c584338c182652'; // samsung M 11
+        //const TEXTBEE_API_KEY = 'f85b579f-b794-4d22-89f7-612554c79839';
+        const TEXTBEE_API_KEY = 'f85b579f-b794-4d22-89f7-612554c79839';
+        const TEXTBEE_DEVICE_ID = '68f9e8f0d9c584338c182652';
         async function sendSms(phoneNumber, templateName, data) {
             let message = smsTemplates[templateName] || '';
             if (!message) { console.error(`SMS template '${templateName}' not found.`); return; }
             for (const key in data) { message = message.replace(new RegExp(`{{${key}}}`, 'g'), data[key]); }
+
             let formattedPhoneNumber = phoneNumber.trim();
             if (formattedPhoneNumber.startsWith('0')) {
                 formattedPhoneNumber = '+94' + formattedPhoneNumber.substring(1);
@@ -797,6 +1880,7 @@
                 console.error("Invalid phone number format for SMS:", phoneNumber);
                 return;
             }
+
             if (!TEXTBEE_API_KEY || !TEXTBEE_DEVICE_ID) { console.error("TextBee API Key or Device ID is missing."); return; }
             const url = `https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`;
             const payload = { recipients: [formattedPhoneNumber], message: message };
@@ -835,6 +1919,7 @@
         }
         document.getElementById('manage-sms-btn').addEventListener('click', () => {
             document.getElementById('template-sale').value = smsTemplates.saleConfirmation || '';
+            document.getElementById('template-credit-sale').value = smsTemplates.creditSaleConfirmation || '';
             document.getElementById('template-login').value = smsTemplates.customerLogin || '';
             document.getElementById('template-installment').value = smsTemplates.installmentUpdate || '';
             document.getElementById('template-reminder').value = smsTemplates.paymentReminder || '';
@@ -843,15 +1928,16 @@
         });
         document.getElementById('sms-templates-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const newTemplates = { 
-                ...smsTemplates, 
-                saleConfirmation: document.getElementById('template-sale').value, 
-                customerLogin: document.getElementById('template-login').value, 
-                installmentUpdate: document.getElementById('template-installment').value, 
-                paymentReminder: document.getElementById('template-reminder').value, 
+            const newTemplates = {
+                ...smsTemplates,
+                saleConfirmation: document.getElementById('template-sale').value,
+                creditSaleConfirmation: document.getElementById('template-credit-sale').value,
+                customerLogin: document.getElementById('template-login').value,
+                installmentUpdate: document.getElementById('template-installment').value,
+                paymentReminder: document.getElementById('template-reminder').value,
                 loginFailed: document.getElementById('template-loginFailed').value
-             };
-            try { await database.ref('config/smsTemplates').set(newTemplates); smsTemplates = newTemplates; showToast('SMS templates saved successfully!'); document.getElementById('sms-templates-modal').style.display = 'none'; } 
+            };
+            try { await database.ref('config/smsTemplates').set(newTemplates); smsTemplates = newTemplates; showToast('SMS templates saved successfully!'); document.getElementById('sms-templates-modal').style.display = 'none'; }
             catch (error) { showToast('Failed to save templates.', true); console.error(error); }
         });
         document.getElementById('reset-sms-btn').addEventListener('click', async () => {
@@ -860,6 +1946,7 @@
                     await database.ref('config/smsTemplates').set(defaultTemplates);
                     smsTemplates = defaultTemplates;
                     document.getElementById('template-sale').value = defaultTemplates.saleConfirmation || '';
+                    document.getElementById('template-credit-sale').value = defaultTemplates.creditSaleConfirmation || '';
                     document.getElementById('template-login').value = defaultTemplates.customerLogin || '';
                     document.getElementById('template-installment').value = defaultTemplates.installmentUpdate || '';
                     document.getElementById('template-reminder').value = defaultTemplates.paymentReminder || '';
@@ -882,7 +1969,7 @@
             } catch (error) { showToast("Failed to download SMS log.", true); console.error(error); }
         }
         document.getElementById('download-sms-log-btn').addEventListener('click', downloadSmsLog);
-        
+
         // CATEGORY MANAGEMENT
         function loadCategories() {
             database.ref('config/categories').on('value', (snapshot) => {
@@ -893,7 +1980,7 @@
                     const selectedValue = dropdown.value;
                     dropdown.innerHTML = '';
                     if (Object.keys(categories).length === 0) {
-                        dropdown.innerHTML = '<option value="saree">Saree</option><option value="purse">Purse</option>'; 
+                        dropdown.innerHTML = '<option value="saree">Saree</option><option value="purse">Purse</option>';
                     } else {
                         for (const key in categories) {
                             const option = document.createElement('option');
@@ -952,7 +2039,7 @@
         }
         async function deleteCategory(key, name) {
             if (!confirm(`Are you sure you want to delete the category "${name}"?`)) return;
-             try {
+            try {
                 const stockSnap = await database.ref('stock').orderByChild('category').equalTo(name).once('value');
                 if (stockSnap.exists()) {
                     return showToast('Cannot delete category as it is currently in use by stock items.', true);
@@ -980,11 +2067,11 @@
             document.getElementById('accept-terms').checked = false;
             document.getElementById('register-submit-btn').disabled = true;
         });
-        
+
         document.getElementById('accept-terms').addEventListener('change', (e) => {
             document.getElementById('register-submit-btn').disabled = !e.target.checked;
         });
-        
+
         async function fetchAndShowTerms() {
             const modal = document.getElementById('terms-modal');
             const contentDiv = document.getElementById('terms-content');
@@ -1008,66 +2095,30 @@
             fetchAndShowTerms();
         });
 
-        const readPdf417 = (file) => {
-            return new Promise((resolve) => {
-                if (!file) return resolve(null);
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = async function() {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-                        
-                        try {
-                            const codeReader = new ZXing.BrowserPDF417Reader();
-                            const result = await codeReader.decodeFromImageData(imageData);
-                            resolve(result.getText());
-                        } catch (err) {
-                            console.warn("PDF417 decoding failed:", err);
-                            resolve(null);
-                        }
-                    };
-                    img.onerror = () => resolve(null);
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => resolve(null);
-                reader.readAsDataURL(file);
-            });
-        };
 
         document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const name = form['register-name'].value, contact = form['register-contact'].value, address = form['register-address'].value, workplace = form['register-workplace'].value, workAddress = form['register-work-address'].value, idFrontFile = form['register-id-front'].files[0], idBackFile = form['register-id-back'].files[0];
 
-            if(!name || !contact || !idFrontFile || !idBackFile) { return showToast('Please fill all required fields and upload both ID images.', true); }
-            
+            if (!name || !contact || !idFrontFile || !idBackFile) { return showToast('Please fill all required fields and upload both ID images.', true); }
+
             const loader = document.getElementById('register-loader');
-            const scanLoader = document.getElementById('id-scan-loader-modal');
             loader.style.display = 'flex';
-            
+
             try {
                 await loadSmsTemplates();
                 const uploadFile = async (file, path) => (await (await storage.ref(path).put(file)).ref.getDownloadURL());
-                const [frontUrl, backUrl] = await Promise.all([ uploadFile(idFrontFile, `id-cards/${contact}-front-${Date.now()}`), uploadFile(idBackFile, `id-cards/${contact}-back-${Date.now()}`) ]);
-                
-                loader.style.display = 'none';
-                scanLoader.style.display = 'flex';
+                const [frontUrl, backUrl] = await Promise.all([uploadFile(idFrontFile, `id-cards/${contact}-front-${Date.now()}`), uploadFile(idBackFile, `id-cards/${contact}-back-${Date.now()}`)]);
 
-                const scannedText = await readPdf417(idBackFile);
-                if(scannedText) { showToast("ID analysis successful!"); } else { showToast("Could not read ID barcode automatically.", true); }
-                
-                const requestData = { name, contact, address, workplace, workAddress, idFrontUrl: frontUrl, idBackUrl: backUrl, status: 'pending', requestDate: new Date().toISOString(), scannedIdData: scannedText || null };
+                loader.style.display = 'none';
+
+                const requestData = { name, contact, address, workplace, workAddress, idFrontUrl: frontUrl, idBackUrl: backUrl, status: 'pending', requestDate: new Date().toISOString() };
 
                 await database.ref('registrationRequests').push(requestData);
                 sendSms(contact, 'registrationRequest', { customerName: name });
                 showToast('Registration request submitted successfully!');
-                
+
                 document.getElementById('register-modal').style.display = 'none';
                 form.reset();
                 document.getElementById('id-front-preview').classList.add('hidden');
@@ -1077,7 +2128,6 @@
                 showToast('Registration failed. Please try again.', true);
             } finally {
                 loader.style.display = 'none';
-                scanLoader.style.display = 'none';
             }
         });
 
@@ -1097,12 +2147,7 @@
             backInput.addEventListener('change', () => handleFileChange(backInput, backPreview));
         }
         setupImagePreviews();
-        
-        function showScannedDetails(data) {
-            const content = document.getElementById('scanned-details-content');
-            content.innerHTML = `<pre class="whitespace-pre-wrap font-sans">${data}</pre>`;
-            document.getElementById('scanned-details-modal').style.display = 'flex';
-        }
+
 
         function fetchAndDisplayRegistrationRequests() {
             database.ref('registrationRequests').orderByChild('status').equalTo('pending').on('value', (snapshot) => {
@@ -1112,7 +2157,6 @@
                 snapshot.forEach(childSnapshot => {
                     const key = childSnapshot.key;
                     const req = childSnapshot.val();
-                    const scanBtn = req.scannedIdData ? `<button onclick='showScannedDetails(${JSON.stringify(req.scannedIdData)})' class="text-xs text-indigo-500 hover:underline">View Scanned Data</button>` : '';
                     list.innerHTML += `
                         <div class="card p-4">
                             <div class="flex justify-between items-start">
@@ -1120,7 +2164,6 @@
                                     <h4 class="font-bold text-lg">${req.name}</h4>
                                     <p class="text-gray-600">${req.contact}</p>
                                 </div>
-                                ${scanBtn}
                             </div>
                             <p class="text-gray-500 text-sm mt-1">${req.address || 'No address provided'}</p>
                             <p class="text-gray-500 text-sm mt-1"><b>Work:</b> ${req.workplace || 'N/A'}</p>
@@ -1141,7 +2184,7 @@
                 });
             });
         }
-        
+
         function openEditCustomerModal(key, customer) {
             const modal = document.getElementById('edit-customer-modal');
             modal.querySelector('#edit-customer-key').value = key;
@@ -1171,48 +2214,8 @@
                 console.error(error);
             }
         });
-        
-        async function rescanId(contact, reqKey) {
-            document.getElementById('id-scan-loader-modal').style.display = 'flex';
-            try {
-                const reqSnap = await database.ref('registrationRequests/' + reqKey).once('value');
-                if (!reqSnap.exists()) throw new Error('Request not found');
-                const idBackUrl = reqSnap.val().idBackUrl;
 
-                const blob = await new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = "Anonymous";
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        canvas.toBlob(resolve, 'image/jpeg');
-                    };
-                    img.onerror = (err) => reject(new Error("Failed to load image for scanning."));
-                    img.src = idBackUrl;
-                });
 
-                const file = new File([blob], "id_back.jpg", { type: blob.type });
-                const scannedText = await readPdf417(file);
-
-                if (scannedText) {
-                    await database.ref('registrationRequests/' + reqKey).update({ scannedIdData: scannedText });
-                    showScannedDetails(scannedText);
-                    showToast("ID re-scan successful!");
-                } else {
-                    showToast("Could not read barcode from image.", true);
-                }
-
-            } catch (error) {
-                showToast("ID re-scan failed.", true);
-                console.error(error);
-            } finally {
-                document.getElementById('id-scan-loader-modal').style.display = 'none';
-            }
-        }
-        
         async function fetchAndDisplayRegisteredCustomers() {
             const list = document.getElementById('registered-customers-list');
             try {
@@ -1220,48 +2223,41 @@
                     database.ref('customers').orderByChild('status').equalTo('approved').once('value'),
                     database.ref('registrationRequests').once('value')
                 ]);
-                
+
                 list.innerHTML = '';
                 if (!customersSnap.exists()) { list.innerHTML = '<p class="text-gray-500">No registered customers found.</p>'; return; }
-                const requests = requestsSnap.val() || {};
-                const customers = customersSnap.val();
-                
-                document.getElementById('registered-customer-count').textContent = Object.keys(customers).length;
-                
-                list.innerHTML = `<div class="grid grid-cols-5 gap-4 font-bold text-sm border-b pb-2"><p>Name</p><p>ID Photos</p><p>ID Verified</p><p>Registered</p><p>Actions</p></div>`;
 
-                for(const phone in customers) {
-                    const customer = customers[phone];
+                registrationRequestsData = requestsSnap.val() || {};
+                registeredCustomersData = customersSnap.val() || {};
+
+                document.getElementById('registered-customer-count').textContent = Object.keys(registeredCustomersData).length;
+
+                list.innerHTML = `<div class="grid grid-cols-4 gap-4 font-bold text-sm border-b pb-2"><p>Name</p><p>ID Photos</p><p>Registered</p><p>Actions</p></div>`;
+
+                for (const phone in registeredCustomersData) {
+                    const customer = registeredCustomersData[phone];
                     let reqKey, requestData;
-                    for (const key in requests) {
-                        if (requests[key].contact === phone) {
+                    for (const key in registrationRequestsData) {
+                        if (registrationRequestsData[key].contact === phone) {
                             reqKey = key;
-                            requestData = requests[key];
+                            requestData = registrationRequestsData[key];
                             break;
                         }
                     }
 
-                    const verifiedIcon = requestData && requestData.scannedIdData ? `<span class="material-icons text-green-500" title="Verified">check_circle</span>` : `<span class="material-icons text-red-500" title="Not Verified">cancel</span>`;
-                    
-                    const viewDataBtn = requestData && requestData.scannedIdData ? `<button onclick='showScannedDetails(${JSON.stringify(requestData.scannedIdData)})' class="p-1 bg-gray-200 rounded-full hover:bg-gray-300" title="View Scanned Data"><span class="material-icons text-sm">visibility</span></button>` : ``;
-                    
-                    const rescanBtn = requestData ? `<button onclick='rescanId("${phone}", "${reqKey}")' class="p-1 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200" title="Re-scan ID"><span class="material-icons text-sm">document_scanner</span></button>` : ``;
-
                     const idPhotos = requestData ? `<div class="flex gap-2"> <a href="${requestData.idFrontUrl}" target="_blank"><img src="${requestData.idFrontUrl}" class="w-12 h-8 object-cover rounded border"/></a> <a href="${requestData.idBackUrl}" target="_blank"><img src="${requestData.idBackUrl}" class="w-12 h-8 object-cover rounded border"/></a> </div>` : '<span>N/A</span>';
-                    
+
                     const regDate = requestData ? new Date(requestData.requestDate).toLocaleDateString() : 'N/A';
-                    
+
                     list.innerHTML += `
-                        <div class="grid grid-cols-5 gap-4 items-center py-2 border-b">
+                        <div class="grid grid-cols-4 gap-4 items-center py-2 border-b">
                            <div>
                                 <p class="font-semibold">${customer.name}</p>
                                 <p class="text-xs text-gray-500">${customer.contact}</p>
                            </div>
                            <div class="flex justify-center">${idPhotos}</div>
-                           <div class="flex justify-center">${verifiedIcon}</div>
                            <p class="text-sm text-gray-600">${regDate}</p>
                            <div class="flex justify-center gap-2">
-                                ${viewDataBtn} ${rescanBtn}
                                 <button onclick='openEditCustomerModal("${phone}", ${JSON.stringify(customer)})' class="p-1 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200" title="Edit Customer"><span class="material-icons text-sm">edit</span></button>
                            </div>
                         </div>`;
@@ -1279,11 +2275,11 @@
                 const requestRef = database.ref('registrationRequests/' + key);
                 const snapshot = await requestRef.once('value');
                 const request = snapshot.val();
-                if(!request) return showToast('Request not found.', true);
-                
+                if (!request) return showToast('Request not found.', true);
+
                 const customerData = { name: request.name, contact: request.contact, address: request.address, workplace: request.workplace, workAddress: request.workAddress, status: 'approved' };
                 await database.ref('customers/' + request.contact).set(customerData);
-                await requestRef.update({status: 'approved'});
+                await requestRef.update({ status: 'approved' });
 
                 sendSms(request.contact, 'registrationSuccess', { customerName: request.name });
                 showToast('Registration approved!');
@@ -1292,7 +2288,7 @@
                 showToast('Approval failed.', true);
             }
         }
-        
+
         function openRejectModal(key, contact, name) {
             const modal = document.getElementById('reject-reason-modal');
             modal.querySelector('#reject-request-key').value = key;
@@ -1306,22 +2302,22 @@
             const key = e.target['reject-request-key'].value;
             const contact = e.target['reject-customer-contact'].value;
             const reason = e.target['reject-reason'].value;
-            
+
             try {
-                await database.ref('registrationRequests/' + key).update({status: 'rejected', rejectReason: reason});
+                await database.ref('registrationRequests/' + key).update({ status: 'rejected', rejectReason: reason });
                 sendSms(contact, 'registrationRejected', { reason: reason });
                 showToast('Registration rejected.');
                 document.getElementById('reject-reason-modal').style.display = 'none';
-            } catch(error) {
+            } catch (error) {
                 showToast('Rejection failed.', true);
             }
         });
-        
-        document.querySelectorAll('.close-modal-btn').forEach(btn => { 
-            btn.addEventListener('click', (e) => { 
+
+        document.querySelectorAll('.close-modal-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal');
-                modal.style.display = 'none'; 
-                if(modal.id === 'camera-modal') closeCamera();
+                modal.style.display = 'none';
+                if (modal.id === 'camera-modal') closeCamera();
                 if (modal.id === 'register-modal') {
                     document.getElementById('register-form').reset();
                     document.getElementById('id-front-preview').classList.add('hidden');
@@ -1329,11 +2325,9 @@
                     document.getElementById('accept-terms').checked = false;
                     document.getElementById('register-submit-btn').disabled = true;
                 }
-            }); 
+            });
         });
     </script>
 </body>
+
 </html>
-
-
-
