@@ -1864,7 +1864,7 @@
         document.getElementById('print-barcodes-btn').addEventListener('click', generateBarcodePDF);
 
         //const TEXTBEE_API_KEY = 'f85b579f-b794-4d22-89f7-612554c79839';
-        const TEXTBEE_API_KEY = 'f85b579f-b794-4d22-89f7-612554c79839';
+       /* const TEXTBEE_API_KEY = 'f85b579f-b794-4d22-89f7-612554c79839';
         const TEXTBEE_DEVICE_ID = '68f9e8f0d9c584338c182652';
         async function sendSms(phoneNumber, templateName, data) {
             let message = smsTemplates[templateName] || '';
@@ -1892,6 +1892,55 @@
                 await database.ref('smsLogs').push({ date: new Date().toISOString(), description: templateName, contactNumber: phoneNumber, message: message });
             } catch (error) { console.error('Failed to send SMS:', error.response ? error.response.data : error.message); showToast('Failed to send SMS.', true); }
         }
+        */
+async function sendSms(phoneNumber, templateName, data = {}) {
+    let message = smsTemplates[templateName] || '';
+    if (!message) { 
+        console.error(`SMS template '${templateName}' not found.`); 
+        return; 
+    }
+    
+    for (const key in data) { 
+        message = message.replace(new RegExp(`{{${key}}}`, 'g'), data[key]); 
+    }
+
+    const customerName = data.customerName || '';
+
+    try {
+        // 1. 'messages' node එකේ අවසානයටම ඇති Key එක ලබා ගැනීම
+        const snapshot = await database.ref('messages').orderByKey().limitToLast(1).once('value');
+        let nextNumber = 1;
+
+        if (snapshot.exists()) {
+            const lastKey = Object.keys(snapshot.val())[0]; // උදා: "msg002"
+            const lastNum = parseInt(lastKey.replace('msg', ''), 10);
+            if (!isNaN(lastNum)) {
+                nextNumber = lastNum + 1;
+            }
+        }
+
+        // 2. 'msg001', 'msg002' ලෙස ඉලක්කම් 3 කින් යුතු Format එක සකසා ගැනීම
+        const customKey = 'msg' + String(nextNumber).padStart(3, '0');
+
+        // 3. .push() වෙනුවට .set() මගින් Custom Key එක යටතේ Save කිරීම
+        await database.ref(`messages/${customKey}`).set({
+            customerName: customerName,
+            message: message,
+            number: phoneNumber,
+            status: "pending"
+        });
+
+        console.log(`Message saved to Firebase successfully as ${customKey}`);
+        showToast(`SMS queued for ${phoneNumber}`);
+        await database.ref('smsLogs').push({ date: new Date().toISOString(), description: templateName, contactNumber: phoneNumber, message: message });
+       
+
+    } catch (error) {
+        console.error('Failed to save message to Firebase:', error);
+        showToast('Failed to save message.', true);
+    }
+}
+        
         async function checkAndSendReminders() {
             const salesSnap = await database.ref('sales').once('value');
             if (!salesSnap.exists()) return;
